@@ -12,9 +12,7 @@ mod transfers;
 
 use crate::client::{self, Role};
 use crate::downloads::{self, Download};
-use crate::ipc::{
-    Anchor, Dock, DownloadAction, PopupKind, Security, TabState, ToolbarQueryHandler, UiState,
-};
+use crate::ipc::{Anchor, DownloadAction, PopupKind, Security, TabState, ToolbarQueryHandler, UiState};
 use crate::task::{post_ui, post_ui_delayed};
 use crate::{ui, urlfix, views};
 use cef::wrapper::message_router::{
@@ -83,11 +81,6 @@ pub enum Action {
     Download {
         id: u32,
         action: DownloadAction,
-    },
-    SetDevtoolsDock(Dock),
-    SplitterMove {
-        dx: f64,
-        dy: f64,
     },
 }
 
@@ -192,22 +185,8 @@ struct State {
     removed_downloads: HashSet<u32>,
 
     // DevTools (shell/devtools.rs).
-    dock: Dock,
-    /// Встроенные в окно DevTools по вкладкам.
-    devtools_views: HashMap<TabId, BrowserView>,
-    /// Вкладки, у которых DevTools открыты отдельным окном.
+    /// Вкладки, у которых открыто окно DevTools.
     devtools_windows: HashSet<TabId>,
-    /// Открыть DevTools этой вкладки заново, когда закроются (смена режима).
-    devtools_reopen: Option<TabId>,
-    devtools_width: i32,
-    devtools_height: i32,
-    splitter_view: Option<BrowserView>,
-    splitter_browser: Option<Browser>,
-    splitter_ready: bool,
-    /// Браузеры встроенных DevTools (из DevToolsViewDelegate).
-    devtools_browsers: HashMap<TabId, Browser>,
-    /// Observer сообщений CDP вкладки для моста DevTools.
-    devtools_registrations: HashMap<TabId, Registration>,
 }
 
 impl State {
@@ -264,7 +243,6 @@ impl State {
             downloads_badge,
             downloads_progress,
             popup: self.popup,
-            devtools_dock: self.dock,
             devtools_open: self.active.is_some_and(|id| self.devtools_open(id)),
         })
         .unwrap_or_else(|_| "{}".into())
@@ -304,8 +282,6 @@ pub(crate) fn browser_settings(role: Role) -> BrowserSettings {
             // Цвет карточки (--popover в popup.html): прозрачным окно
             // в CEF Views быть не может.
             Role::Popup => 0xFF_22_25_2D,
-            // Цвет панели (--toolbar), как у разделителя в splitter.html.
-            Role::Splitter => 0xFF_1D_20_27,
             Role::DevTools(_) => CHROME_BG,
             Role::Tab(_) => 0xFF_FF_FF_FF,
         },
@@ -379,7 +355,7 @@ impl Shell {
 
         // Контейнер вкладок: все BrowserView лежат в нём друг на друге,
         // видима только активная. Layout-менеджера нет: размеры страниц
-        // и встроенных DevTools считает layout_content (shell/devtools.rs).
+        // задаёт layout_content (shell/devtools.rs).
         let mut content_delegate = views::ContentPanelDelegate::new(self.arc());
         let content = panel_create(Some(&mut content_delegate));
         if let Some(content) = &content {
@@ -390,8 +366,6 @@ impl Shell {
             let mut s = self.lock();
             s.window = Some(window.clone());
             s.window_active = true;
-            s.devtools_width = devtools::DEFAULT_WIDTH;
-            s.devtools_height = devtools::DEFAULT_HEIGHT;
             s.toolbar_view = toolbar.clone();
             s.content = content.clone();
         }
@@ -419,9 +393,6 @@ impl Shell {
         }));
 
         self.create_popup(&window);
-        if let Some(content) = &content {
-            self.create_splitter(content);
-        }
         self.open_tab(None, None, true);
         window.show();
         window.activate();
@@ -439,8 +410,6 @@ impl Shell {
                 .iter()
                 .cloned()
                 .chain(s.popup_browser.iter().cloned())
-                .chain(s.splitter_browser.iter().cloned())
-                .chain(s.devtools_browsers.values().cloned())
                 .chain(s.tabs.iter().filter_map(|t| t.browser.clone()))
                 .chain(s.closing.iter().filter_map(|t| t.browser.clone()))
                 .collect()
@@ -483,8 +452,6 @@ impl Shell {
                 s.content.take(),
                 s.toolbar_view.take(),
                 (s.popup_view.take(), s.popup_overlay.take()),
-                (s.splitter_view.take(), std::mem::take(&mut s.devtools_views)),
-                std::mem::take(&mut s.devtools_registrations),
                 std::mem::take(&mut s.tabs),
                 std::mem::take(&mut s.closing),
                 std::mem::take(&mut s.download_callbacks),
@@ -531,7 +498,6 @@ impl Shell {
                 | Action::ZoomOut
                 | Action::ZoomReset
                 | Action::Download { .. }
-                | Action::SetDevtoolsDock(_)
         );
         if !keeps_popup {
             self.close_popup(false);
@@ -597,8 +563,6 @@ impl Shell {
             Action::FocusAddress => self.focus_address(),
             Action::FocusContent => self.focus_content(),
             Action::DevTools => self.toggle_devtools(),
-            Action::SetDevtoolsDock(dock) => self.set_devtools_dock(dock),
-            Action::SplitterMove { dx, dy } => self.splitter_move(dx, dy),
             Action::ZoomIn => self.zoom(ZoomCommand::IN),
             Action::ZoomOut => self.zoom(ZoomCommand::OUT),
             Action::ZoomReset => self.zoom(ZoomCommand::RESET),
@@ -790,7 +754,6 @@ impl Shell {
         for (_, view) in views.iter().filter(|(active, _)| !*active) {
             view.set_visible(0);
         }
-        // Размеры страниц, встроенных DevTools и разделителя.
         self.layout_content();
         if let Some(view) = focus_view {
             view.request_focus();
@@ -839,8 +802,6 @@ impl Shell {
                 view,
                 next,
             } => {
-                // Встроенные DevTools закрываем вместе со вкладкой.
-                self.close_devtools_of(id);
                 view.set_visible(0);
                 match next {
                     Some(next) => self.activate(next),
@@ -908,11 +869,6 @@ impl Shell {
             s.popup_ready = true;
             return s.ui_state_json();
         }
-        if self.is_splitter(browser) {
-            let mut s = self.lock();
-            s.splitter_ready = true;
-            return s.ui_state_json();
-        }
         let (json, focus) = {
             let mut s = self.lock();
             s.toolbar_ready = true;
@@ -929,7 +885,7 @@ impl Shell {
     /// Отправить панели и всплывающему окну свежее состояние
     /// и обновить заголовок окна.
     pub(crate) fn push_state(&self) {
-        let (json, popup_json, splitter_json, toolbar, window_title) = {
+        let (json, popup_json, toolbar, window_title) = {
             let mut s = self.lock();
             let title = s.active_tab().map(|t| t.shown_title()).unwrap_or_default();
             let window_title = if title.is_empty() {
@@ -945,11 +901,7 @@ impl Shell {
             // Всплывающему окну шлём и закрытие (popup: null), чтобы при
             // следующем открытии оно заново измерило себя.
             let popup_json = s.popup_ready.then(|| s.ui_state_json());
-            // Разделителю нужно только положение DevTools.
-            let splitter_json = s.splitter_ready.then(|| {
-                serde_json::json!({ "devtoolsDock": s.dock }).to_string()
-            });
-            (json, popup_json, splitter_json, s.toolbar_browser.clone(), changed)
+            (json, popup_json, s.toolbar_browser.clone(), changed)
         };
         if let Some((Some(window), title)) = window_title {
             window.set_title(Some(&cef_str(&title)));
@@ -959,9 +911,6 @@ impl Shell {
         }
         if let Some(json) = popup_json {
             self.run_in_popup(&format!("window.rustium && window.rustium.update({json});"));
-        }
-        if let Some(json) = splitter_json {
-            self.run_in_splitter(&format!("window.rustium && window.rustium.update({json});"));
         }
     }
 
@@ -984,18 +933,9 @@ impl Shell {
             .is_some_and(|b| b.identifier() == id)
     }
 
-    /// Браузер интерфейса: панель, всплывающее окно, разделитель DevTools
-    /// (им доступен cefQuery).
+    /// Браузер интерфейса: панель или всплывающее окно (им доступен cefQuery).
     pub(crate) fn is_ui_browser(&self, browser: &Browser) -> bool {
-        self.is_toolbar(browser) || self.is_popup(browser) || self.is_splitter(browser)
-    }
-
-    pub(crate) fn is_splitter(&self, browser: &Browser) -> bool {
-        let id = browser.identifier();
-        self.lock()
-            .splitter_browser
-            .as_ref()
-            .is_some_and(|b| b.identifier() == id)
+        self.is_toolbar(browser) || self.is_popup(browser)
     }
 
     pub(crate) fn is_popup(&self, browser: &Browser) -> bool {
@@ -1112,10 +1052,6 @@ impl Shell {
             if role == Role::Popup {
                 s.popup_browser = None;
                 s.popup_ready = false;
-            }
-            if role == Role::Splitter {
-                s.splitter_browser = None;
-                s.splitter_ready = false;
             }
             let leftover = match role {
                 Role::Tab(id) => s

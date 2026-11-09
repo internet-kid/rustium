@@ -41,25 +41,18 @@ cargo run --bin bundle && open target/bundle/rustium.app   # macOS
 У popup та же защита, что у панели: метка `UI_MARKER`, своя единственная
 разрешённая страница в `on_before_browse`.
 
-## DevTools внутри окна
+## DevTools
 
-`src/shell/devtools.rs`, `src/devtools_bridge.rs`. Штатные DevTools CEF
-встроить нельзя: CEF 156 создаёт их только в Chrome-стиле, Alloy-окно такие
-BrowserView не принимает (падение в `show_dev_tools`), а окно Chrome-стиля
-ломается, когда его Chrome-браузер закрывается (падение при смене фокуса).
-Поэтому встроенные DevTools — свой Alloy-BrowserView с фронтендом
-`devtools://devtools/bundled/devtools_app.html?ws=…`, который через
-WebSocket-мост (127.0.0.1, случайный порт, секретный токен в пути) говорит
-со вкладкой по CDP: `send_dev_tools_message` / `add_dev_tools_message_observer`.
-Отдельное окно — штатный `show_dev_tools`. Панель вкладок без layout-менеджера:
-размеры считает `layout_content` (функция `split`), разделитель —
-`ui/splitter.html`.
+Ветка `devtools-window`: DevTools только отдельным окном — штатный
+`host.show_dev_tools` со своим клиентом (роль `DevTools(id)`), чтобы узнать
+о закрытии окна (`src/shell/devtools.rs`). Встроить штатные DevTools в окно
+в CEF 156 нельзя (CEF запрещает это патчем к Chrome); исследование —
+`docs/devtools-research.md` в ветке `devtools-native`, вариант со встроенными
+DevTools через свой фронтенд и CDP-мост — в `main`.
 
-- Если `on_popup_browser_view_created` возвращает 1, view надо вставить в
-  окно сразу, в самом колбэке (CEF зовёт его синхронно); отложенная вставка
-  роняет процесс.
-- События браузеров DevTools могут прийти с клиентом вкладки: роль
+- События браузера DevTools могут прийти с клиентом вкладки: роль
   определяет `Shell::role_of` по `identifier()` браузера.
+- Панель вкладок без layout-менеджера: размеры задаёт `layout_content`.
 
 ## Правила кода
 

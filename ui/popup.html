@@ -119,13 +119,6 @@
     font-variant-numeric: tabular-nums;
   }
   .stepper button:hover, .square:hover { background: var(--raised-row); color: var(--text); }
-  /* Developer tools: toggle + where to dock. */
-  .devtools { display: flex; align-items: center; gap: 6px; padding-right: 4px; }
-  .devtools .item.grow { flex: 1; min-width: 0; }
-  .stepper.dock button { width: 30px; }
-  .stepper.dock button + button { border-left: 1px solid var(--line); border-radius: 0; }
-  .stepper.dock button:last-child { border-radius: 0 7px 7px 0; }
-  .stepper.dock button.on { background: var(--raised-row); color: var(--accent); }
   .square {
     width: 30px; height: 30px;
     border: 1px solid var(--line);
@@ -288,9 +281,6 @@ const ICONS = {
   folder: [['path', { d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }]],
   retry: [['path', { d: 'M20 12a8 8 0 1 1-2.3-5.7' }], ['path', { d: 'M20 4v5h-5' }]],
   check: [['path', { d: 'M5 12l5 5 9-10' }]],
-  dockRight: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['path', { d: 'M14 4v16' }], ['path', { d: 'M16.5 8h2M16.5 11h2', 'stroke-width': 1.6 }]],
-  dockBottom: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['path', { d: 'M3 14h18' }], ['path', { d: 'M7 17h6', 'stroke-width': 1.6 }]],
-  dockWindow: [['rect', { x: 3, y: 7, width: 13, height: 12, rx: 2 }], ['path', { d: 'M8 7V5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4' }]],
 };
 
 // ---------------------------------------------------------------------------
@@ -346,30 +336,14 @@ function renderMenu() {
   card.setAttribute('aria-label', 'Main menu');
 }
 
-/** "Developer tools" opens or closes them; the segmented control picks where. */
+/** "Developer tools" opens or closes the DevTools window of the active tab. */
 function devtoolsRow() {
-  const dock = state.devtoolsDock || 'right';
-  const open = !!state.devtoolsOpen;
-  const shortcut = k('⌥⌘I', 'Ctrl+Shift+I');
-  const toggle = el('button', {
-    class: 'item grow', role: 'menuitem',
-    title: `${open ? 'Close' : 'Open'} developer tools (${shortcut})`,
-    on: { click: () => send('devTools') },
-  }, icon(ICONS.code), el('span', { class: 'label' }, open ? 'Close developer tools' : 'Developer tools'));
-  const option = (value, label, shapes) => el('button', {
-    role: 'menuitemradio',
-    'aria-checked': String(dock === value),
-    'aria-label': label,
-    title: label,
-    class: dock === value ? 'on' : '',
-    on: { click: () => send('setDevtoolsDock', { dock: value }) },
-  }, icon(shapes, 14, { 'stroke-width': 2 }));
-  return el('div', { class: 'devtools', role: 'group', 'aria-label': 'Developer tools' },
-    toggle,
-    el('div', { class: 'stepper dock' },
-      option('right', 'Dock to right', ICONS.dockRight),
-      option('bottom', 'Dock to bottom', ICONS.dockBottom),
-      option('window', 'Separate window', ICONS.dockWindow)));
+  return menuItem({
+    label: state.devtoolsOpen ? 'Close developer tools' : 'Developer tools',
+    iconName: 'code',
+    shortcut: k('⌥⌘I', 'Ctrl+Shift+I'),
+    cmd: 'devTools',
+  });
 }
 
 // ---------------------------------------------------------------------------

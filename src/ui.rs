@@ -16,7 +16,6 @@ pub const NEW_TAB_TITLE: &str = "New Tab";
 const TOOLBAR_HTML: &str = include_str!("../ui/toolbar.html");
 const NEWTAB_HTML: &str = include_str!("../ui/newtab.html");
 const POPUP_HTML: &str = include_str!("../ui/popup.html");
-const SPLITTER_HTML: &str = include_str!("../ui/splitter.html");
 
 /// Geist (SIL Open Font License) — шрифт интерфейса по макетам. Вшивается
 /// в страницы как data-URL: панель не грузит ничего из сети.
@@ -27,12 +26,6 @@ const FONT_MARKER: &str = "/*@font-geist*/";
 pub fn toolbar_url() -> &'static str {
     static URL: OnceLock<String> = OnceLock::new();
     URL.get_or_init(|| data_url(&with_fonts(TOOLBAR_HTML)))
-}
-
-/// Разделитель между страницей и встроенными DevTools.
-pub fn splitter_url() -> &'static str {
-    static URL: OnceLock<String> = OnceLock::new();
-    URL.get_or_init(|| data_url(SPLITTER_HTML))
 }
 
 /// Всплывающие окна поверх страницы: меню и загрузки.

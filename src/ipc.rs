@@ -62,25 +62,6 @@ pub enum Command {
         id: u32,
         action: DownloadAction,
     },
-    /// Где показывать DevTools.
-    SetDevtoolsDock {
-        dock: Dock,
-    },
-    /// Разделитель между страницей и DevTools сдвинули на (dx, dy).
-    SplitterMove {
-        dx: f64,
-        dy: f64,
-    },
-}
-
-/// Где показывать DevTools: справа, снизу или отдельным окном.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Dock {
-    #[default]
-    Right,
-    Bottom,
-    Window,
 }
 
 /// Какое всплывающее окно показать.
@@ -138,8 +119,6 @@ impl Command {
             Command::Print => Action::Print,
             Command::Quit => Action::Quit,
             Command::Download { id, action } => Action::Download { id, action },
-            Command::SetDevtoolsDock { dock } => Action::SetDevtoolsDock(dock),
-            Command::SplitterMove { dx, dy } => Action::SplitterMove { dx, dy },
         })
     }
 }
@@ -222,7 +201,6 @@ pub struct UiState {
     pub downloads_progress: f64,
     /// Открытое всплывающее окно.
     pub popup: Option<PopupKind>,
-    pub devtools_dock: Dock,
     /// У активной вкладки открыты DevTools.
     pub devtools_open: bool,
 }
@@ -308,9 +286,6 @@ mod tests {
             serde_json::from_str(r#"{"cmd":"download","id":4,"action":"show"}"#).unwrap();
         assert!(matches!(c, Command::Download { id: 4, action: DownloadAction::Show }));
         assert!(serde_json::from_str::<Command>(r#"{"cmd":"download","id":4,"action":"rm"}"#).is_err());
-        let c: Command =
-            serde_json::from_str(r#"{"cmd":"setDevtoolsDock","dock":"window"}"#).unwrap();
-        assert!(matches!(c, Command::SetDevtoolsDock { dock: Dock::Window }));
     }
 
     #[test]
@@ -335,7 +310,6 @@ mod tests {
             downloads_badge: Badge::Hidden,
             downloads_progress: 0.0,
             popup: Some(PopupKind::Menu),
-            devtools_dock: Dock::Bottom,
             devtools_open: false,
         };
         let json = serde_json::to_string(&s).unwrap();
@@ -344,7 +318,7 @@ mod tests {
         assert!(json.contains("\"windowActive\":true"));
         assert!(json.contains("\"downloadsBadge\":\"hidden\""));
         assert!(json.contains("\"popup\":\"menu\""));
-        assert!(json.contains("\"devtoolsDock\":\"bottom\""));
+
         assert!(json.contains("\"security\":\"secure\""));
     }
 

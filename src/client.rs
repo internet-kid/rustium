@@ -18,9 +18,7 @@ pub enum Role {
     Toolbar,
     /// Всплывающее окно поверх страницы (меню, загрузки).
     Popup,
-    /// Разделитель между страницей и встроенными DevTools.
-    Splitter,
-    /// DevTools вкладки (встроенные или отдельным окном).
+    /// Окно DevTools вкладки.
     DevTools(TabId),
     /// Вкладка с обычным сайтом.
     Tab(TabId),
@@ -29,13 +27,12 @@ pub enum Role {
 impl Role {
     /// Браузер интерфейса (панель или всплывающее окно): ему доступен cefQuery.
     pub fn is_ui(self) -> bool {
-        matches!(self, Role::Toolbar | Role::Popup | Role::Splitter)
+        matches!(self, Role::Toolbar | Role::Popup)
     }
 
     fn log_prefix(self) -> &'static str {
         match self {
             Role::Popup => "[popup]",
-            Role::Splitter => "[splitter]",
             _ => "[toolbar]",
         }
     }
@@ -45,7 +42,6 @@ impl Role {
         match self {
             Role::Toolbar => Some(ui::toolbar_url()),
             Role::Popup => Some(ui::popup_url()),
-            Role::Splitter => Some(ui::splitter_url()),
             Role::Tab(_) | Role::DevTools(_) => None,
         }
     }
@@ -423,7 +419,7 @@ wrap_request_handler! {
         ) {
             let role = self.shell.role_of(self.role, browser.as_deref());
             match role {
-                Role::Toolbar | Role::Popup | Role::Splitter => {
+                Role::Toolbar | Role::Popup => {
                     if let Some(router) = self.shell.router() {
                         router.on_render_process_terminated(browser.as_deref().cloned());
                     }

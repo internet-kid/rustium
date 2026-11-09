@@ -184,56 +184,6 @@ wrap_browser_view_delegate! {
     }
 }
 
-wrap_browser_view_delegate! {
-    // Встроенные DevTools вкладки `tab` (фронтенд DevTools + мост).
-    pub struct DevToolsViewDelegate {
-        shell: Arc<Shell>,
-        tab: TabId,
-    }
-
-    impl ViewDelegate {}
-
-    impl BrowserViewDelegate {
-        fn on_browser_created(
-            &self,
-            _browser_view: Option<&mut BrowserView>,
-            browser: Option<&mut Browser>,
-        ) {
-            if let Some(browser) = browser {
-                self.shell.set_devtools_browser(self.tab, browser.clone());
-            }
-        }
-
-        fn browser_runtime_style(&self) -> RuntimeStyle {
-            RuntimeStyle::ALLOY
-        }
-    }
-}
-
-wrap_browser_view_delegate! {
-    pub struct SplitterViewDelegate {
-        shell: Arc<Shell>,
-    }
-
-    impl ViewDelegate {}
-
-    impl BrowserViewDelegate {
-        fn on_browser_created(
-            &self,
-            _browser_view: Option<&mut BrowserView>,
-            browser: Option<&mut Browser>,
-        ) {
-            if let Some(browser) = browser {
-                self.shell.set_splitter_browser(browser.clone());
-            }
-        }
-
-        fn browser_runtime_style(&self) -> RuntimeStyle {
-            RuntimeStyle::ALLOY
-        }
-    }
-}
-
 wrap_panel_delegate! {
     pub struct ContentPanelDelegate {
         shell: Arc<Shell>,
