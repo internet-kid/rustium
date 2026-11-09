@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rustium — Components &amp; tokens</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#b4abff}a:hover{color:#d4ceff}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 1200px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 24px; background: #0e0f13; color: #eceef3; font-family: Geist, system-ui, sans-serif; font-size: 13px; overflow: hidden">
+
+  <header style="height: 56px; flex: none; display: flex; align-items: flex-end; justify-content: space-between">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em">Components &amp; tokens</h1>
+      <p style="margin: 0; font-size: 13.5px; color: #9aa0ad">Dark theme. Shared by the toolbar panel and rustium:// pages.</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; color: #9aa0ad; font-size: 12px">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M24 3l18.2 10.5v21L24 45 5.8 34.5v-21z" fill="{{accent}}"></path><path d="M24 14l8.7 5v10L24 34l-8.7-5V19z" fill="#0e0f13"></path></svg>
+      <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.02em; color: #eceef3">Rustium</span>
+    </div>
+  </header>
+
+  <!-- Row 1: tokens -->
+  <div style="height: 280px; flex: none; display: grid; grid-template-columns: 1fr 340px 260px; gap: 24px">
+
+    <section aria-labelledby="t-colors" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="t-colors" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Color tokens</h2>
+      <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #0e0f13; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Window</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#0e0f13</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #1d2027; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Toolbar, card</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#1d2027</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #121419; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Field, side nav</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#121419</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #16181e; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Page</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#16181e</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #22252d; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Raised</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#22252d</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #2a2e37; border: 1px solid rgba(255,255,255,.08)"></span><span style="font-size: 12px">Raised row</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#2a2e37</span></div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #eceef3"></span><span style="font-size: 12px">Text</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#eceef3</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #c9cdd6"></span><span style="font-size: 12px">Secondary</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#c9cdd6</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #9aa0ad"></span><span style="font-size: 12px">Dim</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#9aa0ad</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #6b7180"></span><span style="font-size: 12px">Disabled text</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#6b7180</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #4a4f5c"></span><span style="font-size: 12px">Disabled icon</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#4a4f5c</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #16181e; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 0 4px #16181e, inset 0 0 0 5px rgba(255,255,255,.08)"></span><span style="font-size: 12px">Border</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">white 6–8%</span></div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: {{accent}}"></span><span style="font-size: 12px">Accent</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">{{accent}}</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: {{accentSoft}}; border: 1px solid rgba(255,255,255,.06)"></span><span style="font-size: 12px">Accent tint</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">accent 18%</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #b4abff"></span><span style="font-size: 12px">Link</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#b4abff</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #5ee6b8"></span><span style="font-size: 12px">Success</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#5ee6b8</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #fbbf24"></span><span style="font-size: 12px">Warning</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#fbbf24</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="height: 28px; border-radius: 8px; background: #ff8a80"></span><span style="font-size: 12px">Danger</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">#ff8a80</span></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-type" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="t-type" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Type scale · Geist</h2>
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 24px; font-weight: 600; letter-spacing: -0.02em">Page title</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">24 / 600</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em">Section heading</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">18 / 600</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 15px; font-weight: 600">Dialog title, brand</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">15 / 600</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 13.5px">Address, row title</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">13.5 / 400</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 13px; font-weight: 500">Button, menu, tab</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">13 / 500</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 12px; color: #9aa0ad">Secondary text, hints</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">12 / 400</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><span style="font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Section label</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">11 / 600 caps</span></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-radii" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="t-radii" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Radii &amp; spacing</h2>
+      <div style="display: flex; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="width: 34px; height: 34px; border-radius: 6px; background: #2a2e37"></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">6</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="width: 34px; height: 34px; border-radius: 8px; background: #2a2e37"></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">8</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="width: 34px; height: 34px; border-radius: 9px; background: #2a2e37"></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">9</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="width: 34px; height: 34px; border-radius: 12px; background: #2a2e37"></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">12</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="width: 34px; height: 34px; border-radius: 16px; background: #2a2e37"></span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">16</span></div>
+      </div>
+      <div style="font-size: 11px; color: #6b7180">Controls 6 · fields 8 · tabs 9 · cards 12 · dialogs 16</div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">4</span><span style="width: 4px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">8</span><span style="width: 8px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">12</span><span style="width: 12px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">16</span><span style="width: 16px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">24</span><span style="width: 24px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+        <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #9aa0ad">32</span><span style="width: 32px; height: 8px; border-radius: 2px; background: {{accent}}"></span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Row 2: buttons & fields states, selection controls -->
+  <div style="height: 330px; flex: none; display: grid; grid-template-columns: 720px 1fr; gap: 24px">
+
+    <section aria-labelledby="c-states" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden">
+      <div style="display: grid; grid-template-columns: 112px repeat(5, 1fr); grid-auto-rows: 36px; column-gap: 8px; row-gap: 5px; align-items: center">
+        <h2 id="c-states" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Controls</h2>
+        <span style="font-size: 11px; color: #9aa0ad">Default</span>
+        <span style="font-size: 11px; color: #9aa0ad">Hover</span>
+        <span style="font-size: 11px; color: #9aa0ad">Pressed / filled</span>
+        <span style="font-size: 11px; color: #9aa0ad">Keyboard focus</span>
+        <span style="font-size: 11px; color: #9aa0ad">Disabled</span>
+
+        <span style="font-size: 12px; color: #c9cdd6">Primary button</span>
+        <div><button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; color: #0e0f13; font: inherit; font-size: 13px; font-weight: 600">Allow</button></div>
+        <div><button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; box-shadow: inset 0 0 0 40px rgba(255,255,255,.14); color: #0e0f13; font: inherit; font-size: 13px; font-weight: 600">Allow</button></div>
+        <div><button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; box-shadow: inset 0 0 0 40px rgba(0,0,0,.16); color: #0e0f13; font: inherit; font-size: 13px; font-weight: 600">Allow</button></div>
+        <div><button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: {{accent}}; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #0e0f13; font: inherit; font-size: 13px; font-weight: 600">Allow</button></div>
+        <div><button disabled="" style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: #2a2e37; color: #6b7180; font: inherit; font-size: 13px; font-weight: 600">Allow</button></div>
+
+        <span style="font-size: 12px; color: #c9cdd6">Secondary button</span>
+        <div><button style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: transparent; color: #c9cdd6; font: inherit; font-size: 12.5px">Cancel</button></div>
+        <div><button style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 8px; background: rgba(255,255,255,.06); color: #eceef3; font: inherit; font-size: 12.5px">Cancel</button></div>
+        <div><button style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 8px; background: rgba(255,255,255,.10); color: #eceef3; font: inherit; font-size: 12.5px">Cancel</button></div>
+        <div><button style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: transparent; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #eceef3; font: inherit; font-size: 12.5px">Cancel</button></div>
+        <div><button disabled="" style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; background: transparent; color: #4a4f5c; font: inherit; font-size: 12.5px">Cancel</button></div>
+
+        <span style="font-size: 12px; color: #c9cdd6">Ghost button</span>
+        <div><button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #b4abff; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button></div>
+        <div><button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: rgba(255,255,255,.06); color: #d4ceff; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button></div>
+        <div><button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: rgba(255,255,255,.10); color: #d4ceff; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button></div>
+        <div><button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #b4abff; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button></div>
+        <div><button disabled="" style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #4a4f5c; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button></div>
+
+        <span style="font-size: 12px; color: #c9cdd6">Icon button</span>
+        <div><button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button></div>
+        <div><button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: rgba(255,255,255,.06); color: #eceef3; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button></div>
+        <div><button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: rgba(255,255,255,.10); color: #eceef3; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button></div>
+        <div><button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #eceef3; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button></div>
+        <div><button aria-label="Back" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button></div>
+
+        <span style="font-size: 12px; color: #c9cdd6">Text input</span>
+        <input type="text" aria-label="Folder name" placeholder="Folder name" style="width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: #121419; color: #eceef3; font: inherit; font-size: 13px; outline: none">
+        <input type="text" aria-label="Folder name" placeholder="Folder name" style="width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: #121419; color: #eceef3; font: inherit; font-size: 13px; outline: none">
+        <input type="text" aria-label="Folder name" value="Reading" style="width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: #121419; color: #eceef3; font: inherit; font-size: 13px; outline: none">
+        <input type="text" aria-label="Folder name" value="Read" style="width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; border: 1px solid {{accent}}; border-radius: 8px; background: #121419; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #eceef3; font: inherit; font-size: 13px; outline: none">
+        <input type="text" aria-label="Folder name" placeholder="Folder name" disabled="" style="width: 100%; height: 30px; box-sizing: border-box; padding: 0 10px; border: 1px solid rgba(255,255,255,.05); border-radius: 8px; background: rgba(255,255,255,.02); color: #6b7180; font: inherit; font-size: 13px; outline: none">
+
+        <span style="font-size: 12px; color: #c9cdd6">Search field</span>
+        <label style="position: relative; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-radius: 8px; background: #1d2027; color: #9aa0ad"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" aria-label="Search history" placeholder="Search" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #eceef3; font: inherit; font-size: 13px"></label>
+        <label style="position: relative; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-radius: 8px; background: #22252d; color: #c9cdd6"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" aria-label="Search history" placeholder="Search" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #eceef3; font: inherit; font-size: 13px"></label>
+        <label style="position: relative; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 4px 0 9px; border-radius: 8px; background: #1d2027; color: #9aa0ad"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" aria-label="Search history" value="cef" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #eceef3; font: inherit; font-size: 13px"><button aria-label="Clear search" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button></label>
+        <label style="position: relative; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-radius: 8px; background: #1d2027; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #c9cdd6"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" aria-label="Search history" placeholder="Search" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #eceef3; font: inherit; font-size: 13px"></label>
+        <label style="position: relative; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-radius: 8px; background: rgba(255,255,255,.03); color: #4a4f5c"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex: none"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" aria-label="Search history" placeholder="Search" disabled="" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #6b7180; font: inherit; font-size: 13px"></label>
+      </div>
+    </section>
+
+    <section aria-label="Selection controls" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Switch</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px">
+            <div style="display: flex; align-items: center; gap: 8px"><button role="switch" aria-checked="true" aria-label="Camera" style="position: relative; width: 32px; height: 18px; flex: none; border: 0; padding: 0; border-radius: 9px; background: {{accent}}"><span style="position: absolute; top: 2px; left: 16px; width: 14px; height: 14px; border-radius: 50%; background: #eceef3"></span></button><span style="font-size: 12px; color: #9aa0ad">On</span></div>
+            <div style="display: flex; align-items: center; gap: 8px"><button role="switch" aria-checked="false" aria-label="Microphone" style="position: relative; width: 32px; height: 18px; flex: none; border: 0; padding: 0; border-radius: 9px; background: #3a3f4a"><span style="position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #c9cdd6"></span></button><span style="font-size: 12px; color: #9aa0ad">Off</span></div>
+            <div style="display: flex; align-items: center; gap: 8px"><button role="switch" aria-checked="true" aria-label="Location" style="position: relative; width: 32px; height: 18px; flex: none; border: 0; padding: 0; border-radius: 9px; background: {{accent}}; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}"><span style="position: absolute; top: 2px; left: 16px; width: 14px; height: 14px; border-radius: 50%; background: #eceef3"></span></button><span style="font-size: 12px; color: #9aa0ad">Focus</span></div>
+            <div style="display: flex; align-items: center; gap: 8px"><button role="switch" aria-checked="true" aria-label="Sound" disabled="" style="position: relative; width: 32px; height: 18px; flex: none; border: 0; padding: 0; border-radius: 9px; background: #2a2e37"><span style="position: absolute; top: 2px; left: 16px; width: 14px; height: 14px; border-radius: 50%; background: #4a4f5c"></span></button><span style="font-size: 12px; color: #6b7180">Disabled</span></div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Checkbox &amp; radio</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px">
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px"><input type="checkbox" checked="" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; border-radius: 5px; background: {{accent}}; display: grid; place-items: center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0e0f13" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span>Checked</label>
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px"><input type="radio" name="demo-r" checked="" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 50%; border: 1.5px solid {{accent}}; display: grid; place-items: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}"></span></span>Selected</label>
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px"><input type="checkbox" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 5px; border: 1.5px solid rgba(255,255,255,.28)"></span>Unchecked</label>
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px"><input type="radio" name="demo-r" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.28)"></span>Unselected</label>
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px"><input type="checkbox" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 5px; border: 1.5px solid rgba(255,255,255,.4); box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}"></span>Focus</label>
+            <label style="position: relative; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #6b7180"><input type="radio" name="demo-r2" disabled="" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0"><span aria-hidden="true" style="width: 16px; height: 16px; flex: none; box-sizing: border-box; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.1)"></span>Disabled</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Select</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <button aria-haspopup="listbox" aria-expanded="false" aria-label="Search engine: DuckDuckGo" style="height: 30px; padding: 0 8px 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: #121419; color: #eceef3; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">DuckDuckGo</span><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9aa0ad" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+            <button aria-haspopup="listbox" aria-expanded="false" aria-label="Search engine: Google" style="height: 30px; padding: 0 8px 0 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: #121419; color: #eceef3; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">Google</span><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9cdd6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+            <button aria-haspopup="listbox" aria-expanded="false" aria-label="Language: English (US)" disabled="" style="height: 30px; padding: 0 8px 0 10px; border: 1px solid rgba(255,255,255,.05); border-radius: 8px; background: rgba(255,255,255,.02); color: #6b7180; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">English (US)</span><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4a4f5c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg></button>
+            <span style="font-size: 11px; color: #6b7180">Closed · hover · disabled</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <button aria-haspopup="listbox" aria-expanded="true" aria-label="Search engine: DuckDuckGo" style="height: 30px; padding: 0 8px 0 10px; border: 1px solid {{accent}}; border-radius: 8px; background: #121419; box-shadow: 0 0 0 2px #16181e, 0 0 0 4px {{accent}}; color: #eceef3; display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">DuckDuckGo</span><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9cdd6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"></path></svg></button>
+            <div role="listbox" aria-label="Search engine" style="margin-top: 4px; padding: 4px; border-radius: 12px; background: #22252d; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 1px">
+              <div role="option" aria-selected="false" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 8px; font-size: 13px; color: #c9cdd6"><span style="width: 13px"></span>Google</div>
+              <div role="option" aria-selected="true" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 8px; font-size: 13px; color: #eceef3"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>DuckDuckGo</div>
+              <div role="option" aria-selected="false" style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 8px; background: #2a2e37; font-size: 13px; color: #eceef3"><span style="width: 13px"></span>Startpage</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Row 3: list row, popover, dialog, toast & progress -->
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px">
+
+    <section aria-labelledby="c-list" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 10px">
+      <h2 id="c-list" style="margin: 0 0 2px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">List row</h2>
+      <span style="font-size: 11px; color: #6b7180">Default</span>
+      <a href="#row-1" style="height: 44px; margin-top: -6px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 10px; border-radius: 8px; color: #eceef3; text-decoration: none">
+        <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">D</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">cef — Rust bindings for CEF</span><span style="font-size: 11.5px; color: #9aa0ad">docs.rs</span></span>
+        <span style="font-size: 11.5px; color: #9aa0ad">14:02</span>
+      </a>
+      <span style="font-size: 11px; color: #6b7180">Hover</span>
+      <div style="height: 44px; margin-top: -6px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 10px; border-radius: 8px; background: rgba(255,255,255,.06)">
+        <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #f97316; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">C</span>
+        <a href="#row-2" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; color: #eceef3; text-decoration: none"><span style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">crates.io: Rust Package Registry</span><span style="font-size: 11.5px; color: #9aa0ad">crates.io</span></a>
+        <button aria-label="Remove from history" style="width: 24px; height: 24px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+      </div>
+      <span style="font-size: 11px; color: #6b7180">Keyboard focus</span>
+      <a href="#row-3" style="height: 44px; margin-top: -6px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 10px; border-radius: 8px; box-shadow: inset 0 0 0 2px {{accent}}; color: #eceef3; text-decoration: none">
+        <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #16a34a; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">G</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">tauri-apps/cef-rs</span><span style="font-size: 11.5px; color: #9aa0ad">github.com</span></span>
+        <span style="font-size: 11.5px; color: #9aa0ad">13:47</span>
+      </a>
+      <span style="font-size: 11px; color: #6b7180">Selected</span>
+      <a href="#row-4" aria-current="true" style="height: 44px; margin-top: -6px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 10px; border-radius: 8px; background: {{accentSoft}}; color: #eceef3; text-decoration: none">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa0ad" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">localhost:8080</span><span style="font-size: 11.5px; color: #9aa0ad">localhost</span></span>
+        <span style="font-size: 11.5px; color: #9aa0ad">12:30</span>
+      </a>
+    </section>
+
+    <section aria-labelledby="c-popover" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="c-popover" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Popover panel</h2>
+      <div role="menu" aria-label="Main menu" style="padding: 6px; border-radius: 12px; background: #22252d; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 1px">
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">New tab</span><span style="font-size: 12px; color: #9aa0ad">⌘T</span></button>
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: #2a2e37; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">New window</span><span style="font-size: 12px; color: #9aa0ad">⌘N</span></button>
+        <div role="separator" style="height: 1px; margin: 4px 6px; background: rgba(255,255,255,.08)"></div>
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">History</span><span style="font-size: 12px; color: #9aa0ad">⌘Y</span></button>
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">Downloads</span><span style="font-size: 12px; color: #9aa0ad">⌥⌘L</span></button>
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">Bookmarks</span><span style="font-size: 12px; color: #9aa0ad">⌥⌘B</span></button>
+        <div role="separator" style="height: 1px; margin: 4px 6px; background: rgba(255,255,255,.08)"></div>
+        <div style="height: 30px; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 10px; font-size: 13px">
+          <span style="flex: 1">Zoom</span>
+          <button aria-label="Zoom out" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"></path></svg></button>
+          <span style="width: 40px; text-align: center; font-size: 12.5px; color: #c9cdd6">100%</span>
+          <button aria-label="Zoom in" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+        </div>
+        <button role="menuitem" disabled="" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #6b7180; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">Extensions</span><span style="font-size: 10.5px; padding: 1px 6px; border-radius: 5px; background: #1d2027; color: #9aa0ad">Soon</span></button>
+        <button role="menuitem" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #eceef3; font: inherit; font-size: 13px; text-align: left"><span style="flex: 1">Settings</span><span style="font-size: 12px; color: #9aa0ad">⌘,</span></button>
+      </div>
+    </section>
+
+    <section aria-labelledby="c-dialog" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 id="c-dialog" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Dialog</h2>
+      <div style="flex: 1; display: grid; place-items: center; padding: 12px; border-radius: 12px; background: #0b0c0f">
+        <div role="dialog" aria-labelledby="dlg-title" aria-describedby="dlg-body" style="width: 100%; box-sizing: border-box; padding: 20px; border-radius: 16px; background: #22252d; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 10px">
+          <h3 id="dlg-title" style="margin: 0; font-size: 15px; font-weight: 600">Clear browsing data?</h3>
+          <p id="dlg-body" style="margin: 0; font-size: 13px; line-height: 1.45; color: #c9cdd6">History, cookies and cache from the last hour will be deleted. This can’t be undone.</p>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px">
+            <button style="height: 30px; padding: 0 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: transparent; color: #c9cdd6; font: inherit; font-size: 12.5px">Cancel</button>
+            <button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: #ff8a80; color: #0e0f13; font: inherit; font-size: 13px; font-weight: 600">Clear data</button>
+          </div>
+        </div>
+      </div>
+      <span style="font-size: 11px; color: #6b7180">Scrim black 50% · radius 16 · danger action</span>
+    </section>
+
+    <section aria-label="Toast and progress" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Toast</h2>
+      <div role="status" style="align-self: flex-start; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; border-radius: 12px; background: #2a2e37; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 13px">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5ee6b8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+        Settings saved
+        <button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #b4abff; font: inherit; font-size: 12.5px; font-weight: 500">Undo</button>
+      </div>
+      <div role="alert" style="align-self: flex-start; height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; border-radius: 12px; background: #2a2e37; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 13px">
+        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff8a80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5v.01"></path></svg>
+        Download failed
+        <button style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #b4abff; font: inherit; font-size: 12.5px; font-weight: 500">Retry</button>
+      </div>
+
+      <h2 style="margin: 8px 0 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Progress</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div role="progressbar" aria-label="Download progress" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" style="height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden"><div style="width: 62%; height: 4px; border-radius: 2px; background: {{accent}}"></div></div>
+        <span style="font-size: 11px; color: #6b7180">Determinate · 62%</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div role="progressbar" aria-label="Preparing" style="position: relative; height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden"><div style="position: absolute; left: 34%; top: 0; width: 28%; height: 4px; border-radius: 2px; background: {{accent}}"></div></div>
+        <span style="font-size: 11px; color: #6b7180">Indeterminate · sliding segment</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; margin-top: 2px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <svg role="progressbar" aria-label="45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="2.5"></circle><circle cx="12" cy="12" r="9" fill="none" stroke="{{accent}}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="25.4 56.6" transform="rotate(-90 12 12)"></circle></svg>
+          <span style="font-size: 11px; color: #6b7180">Ring</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,.1); border-top-color: {{accent}}; box-sizing: border-box"></span>
+          <span style="font-size: 11px; color: #6b7180">Spinner</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span aria-hidden="true" style="width: 18px; height: 18px; border-radius: 50%; background: #5ee6b8; display: grid; place-items: center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#0e0f13" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span>
+          <span style="font-size: 11px; color: #6b7180">Done</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8b7cff","options":["#8b7cff","#5ee6b8","#60a5fa","#ff8a65"]},"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8b7cff';
+    return { accent, accentSoft: accent + '2e' };
+  }
+}
+</script>
+</body>
+</html>

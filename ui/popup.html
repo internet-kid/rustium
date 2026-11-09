@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Like the toolbar, the popup can call cefQuery: only its own inline code,
+     the embedded font and data: images, no network requests. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:">
+<title>Rustium popup</title>
+<style>
+  /*@font-geist*/
+
+  /* Tokens: docs/design/Components.dc.html. Menu.dc.html, Downloads.dc.html. */
+  :root {
+    /* Must match MARGIN in src/shell/popup.rs. Zero: a CEF Views browser
+       can't be transparent, so the popup layer is exactly the card. */
+    --margin: 0px;
+    --popover: #22252d;
+    --raised-row: #2a2e37;
+    --page: #16181e;
+    --text: #eceef3;
+    --secondary: #c9cdd6;
+    --dim: #9aa0ad;
+    --disabled-text: #6b7180;
+    --disabled-icon: #4a4f5c;
+    --accent: #8b7cff;
+    --success: #5ee6b8;
+    --warning: #fbbf24;
+    --danger: #ff8a80;
+    --line: rgba(255, 255, 255, .08);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body {
+    margin: 0;
+    background: var(--popover);
+    color: var(--text);
+    font: 13px/1.25 Geist, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+    overflow: hidden;
+  }
+  button { font: inherit; color: inherit; border: 0; padding: 0; background: transparent; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  svg { flex: none; }
+
+  #card {
+    position: absolute;
+    left: var(--margin);
+    top: var(--margin);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    background: var(--popover);
+    border: 1px solid var(--line);
+    outline: none;
+  }
+  #card.menu { width: 300px; }
+  #card.downloads { width: 400px; }
+  /* macOS rounds the popup window itself (mac::style_popup_window), the
+     card border follows. Must match the radii in src/shell/popup.rs. */
+  .rounded #card.menu { border-radius: 14px; }
+  .rounded #card.downloads { border-radius: 16px; }
+
+  /* ---------- Menu ---------- */
+  .item {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-radius: 8px;
+    text-align: left;
+    color: var(--text);
+  }
+  .item svg { stroke: var(--dim); }
+  .item:hover:not(:disabled), .item:focus-visible { background: var(--raised-row); outline: none; }
+  .item:hover:not(:disabled) svg, .item:focus-visible svg { stroke: var(--text); }
+  .item .label { flex: 1; }
+  .item kbd { font: inherit; font-size: 12.5px; color: var(--dim); letter-spacing: .06em; }
+  .item:disabled { color: var(--disabled-text); }
+  .item:disabled svg { stroke: var(--disabled-icon); }
+  .soon {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--disabled-text);
+    background: rgba(255, 255, 255, .05);
+    border-radius: 5px;
+    padding: 2px 6px;
+  }
+  .sep { height: 1px; margin: 4px 6px; background: var(--line); flex: none; }
+
+  .zoom { height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 4px 0 10px; }
+  .zoom > svg { stroke: var(--dim); }
+  .zoom .label { flex: 1; }
+  .stepper {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background: var(--page);
+    border: 1px solid var(--line);
+  }
+  .stepper button { width: 30px; height: 28px; display: grid; place-items: center; color: var(--secondary); }
+  .stepper button:first-child { border-radius: 7px 0 0 7px; }
+  .stepper button:last-child { border-radius: 0 7px 7px 0; }
+  .stepper button.value {
+    width: auto;
+    min-width: 52px;
+    padding: 0 6px;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--text);
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stepper button:hover, .square:hover { background: var(--raised-row); color: var(--text); }
+  /* Developer tools: toggle + where to dock. */
+  .devtools { display: flex; align-items: center; gap: 6px; padding-right: 4px; }
+  .devtools .item.grow { flex: 1; min-width: 0; }
+  .stepper.dock button { width: 30px; }
+  .stepper.dock button + button { border-left: 1px solid var(--line); border-radius: 0; }
+  .stepper.dock button:last-child { border-radius: 0 7px 7px 0; }
+  .stepper.dock button.on { background: var(--raised-row); color: var(--accent); }
+  .square {
+    width: 30px; height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--page);
+    color: var(--secondary);
+    display: grid; place-items: center;
+  }
+
+  /* ---------- Downloads ---------- */
+  .head { height: 40px; display: flex; align-items: center; padding: 0 10px 0 12px; flex: none; }
+  .head h2 { flex: 1; margin: 0; font-size: 14px; font-weight: 600; }
+  #list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .dl { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; }
+  .dl.active { align-items: stretch; }
+  .dl:hover { background: var(--raised-row); }
+  .dl.openable { cursor: pointer; }
+  .tile {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    flex: none;
+    font: 500 9.5px "Geist Mono", ui-monospace, Menlo, monospace;
+    align-self: center;
+  }
+  .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .dl.active .body { gap: 6px; }
+  .name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+  .meta.danger { color: var(--danger); }
+  .bar { height: 4px; border-radius: 2px; background: var(--line); }
+  .bar > div { height: 4px; border-radius: 2px; background: var(--accent); transition: width .2s ease-out; }
+  .dl.paused .bar > div { background: var(--disabled-text); }
+  .dl.canceled .name { color: var(--disabled-text); text-decoration: line-through; }
+  .dl.canceled .meta { color: var(--disabled-text); }
+  .actions { display: flex; gap: 2px; align-self: center; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; color: var(--secondary); }
+  .icon-btn:hover { background: rgba(255, 255, 255, .08); color: var(--text); }
+  .text-btn {
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .text-btn:hover { background: rgba(255, 255, 255, .06); }
+  .empty { padding: 18px 12px 22px; color: var(--dim); font-size: 13px; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { .bar > div { transition: none; } }
+</style>
+</head>
+<body>
+<div id="card" tabindex="-1" hidden></div>
+
+<script>
+'use strict';
+
+const isMac = navigator.platform.toUpperCase().includes('MAC');
+document.documentElement.classList.toggle('rounded', isMac);
+const card = document.getElementById('card');
+/** Same state as the toolbar gets: { popup, zoom, fullscreen, downloads, … } */
+let state = { popup: null };
+let shownKind = null;
+let lastSize = '';
+
+// ---------------------------------------------------------------------------
+// Talking to Rust
+// ---------------------------------------------------------------------------
+
+function query(cmd, extra = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof window.cefQuery !== 'function') {
+      reject(new Error('cefQuery is not available'));
+      return;
+    }
+    window.cefQuery({
+      request: JSON.stringify({ cmd, ...extra }),
+      onSuccess: resolve,
+      onFailure: (code, message) => reject(new Error(`${cmd}: ${code} ${message}`)),
+    });
+  });
+}
+
+function send(cmd, extra) {
+  query(cmd, extra).catch((err) => console.error(err.message));
+}
+
+window.rustium = {
+  update(next) {
+    state = next;
+    render();
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/** An icon from path data: [['path', {d}], ['circle', {cx, cy, r}], …]. */
+function icon(shapes, size = 16, attrs = {}) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const defaults = { fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+  for (const [k, v] of Object.entries({ ...defaults, ...attrs })) svg.setAttribute(k, v);
+  for (const [tag, props] of shapes) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(props)) el.setAttribute(k, v);
+    svg.append(el);
+  }
+  return svg;
+}
+
+function el(tag, props = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') node.className = v;
+    else if (k === 'on') for (const [type, fn] of Object.entries(v)) node.addEventListener(type, fn);
+    else if (k in node) node[k] = v;
+    else node.setAttribute(k, v);
+  }
+  node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
+  return node;
+}
+
+const ICONS = {
+  newTab: [['rect', { x: 3, y: 5, width: 18, height: 15, rx: 2 }], ['path', { d: 'M12 9v7M8.5 12.5h7' }]],
+  window: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['path', { d: 'M3 9h18' }]],
+  private: [['path', { d: 'M3 11h18M6 11l2-6h8l2 6' }], ['circle', { cx: 7.5, cy: 16, r: 3 }], ['circle', { cx: 16.5, cy: 16, r: 3 }], ['path', { d: 'M10.5 16h3' }]],
+  history: [['circle', { cx: 12, cy: 12, r: 9 }], ['path', { d: 'M12 7v5l3 2' }]],
+  download: [['path', { d: 'M12 4v11M7 10l5 5 5-5M5 20h14' }]],
+  star: [['path', { d: 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z' }]],
+  zoom: [['circle', { cx: 11, cy: 11, r: 7 }], ['path', { d: 'M20 20l-4-4' }]],
+  find: [['path', { d: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5' }], ['path', { d: 'M14 3l5 5v2M14 3v5h5' }], ['circle', { cx: 16.5, cy: 16.5, r: 3 }], ['path', { d: 'M21 21l-2.3-2.3' }]],
+  print: [['path', { d: 'M7 9V3h10v6' }], ['rect', { x: 3, y: 9, width: 18, height: 8, rx: 2 }], ['path', { d: 'M7 14h10v7H7z' }]],
+  code: [['path', { d: 'M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16' }]],
+  settings: [['circle', { cx: 12, cy: 12, r: 3 }], ['path', { d: 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z' }]],
+  about: [['circle', { cx: 12, cy: 12, r: 9 }], ['path', { d: 'M12 11v6M12 7.5h.01' }]],
+  quit: [['path', { d: 'M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5' }], ['path', { d: 'M15 8l4 4-4 4M19 12H9' }]],
+  minus: [['path', { d: 'M5 12h14' }]],
+  plus: [['path', { d: 'M12 5v14M5 12h14' }]],
+  fullscreen: [['path', { d: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5' }]],
+  exitFullscreen: [['path', { d: 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' }]],
+  pause: [['path', { d: 'M9 6v12M15 6v12' }]],
+  play: [['path', { d: 'M8 5l11 7-11 7z' }]],
+  close: [['path', { d: 'M18 6L6 18M6 6l12 12' }]],
+  folder: [['path', { d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }]],
+  retry: [['path', { d: 'M20 12a8 8 0 1 1-2.3-5.7' }], ['path', { d: 'M20 4v5h-5' }]],
+  check: [['path', { d: 'M5 12l5 5 9-10' }]],
+  dockRight: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['path', { d: 'M14 4v16' }], ['path', { d: 'M16.5 8h2M16.5 11h2', 'stroke-width': 1.6 }]],
+  dockBottom: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['path', { d: 'M3 14h18' }], ['path', { d: 'M7 17h6', 'stroke-width': 1.6 }]],
+  dockWindow: [['rect', { x: 3, y: 7, width: 13, height: 12, rx: 2 }], ['path', { d: 'M8 7V5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-4' }]],
+};
+
+// ---------------------------------------------------------------------------
+// Main menu (Menu.dc.html)
+// ---------------------------------------------------------------------------
+
+const k = (mac, other) => (isMac ? mac : other);
+
+function menuItem({ label, iconName, shortcut, cmd, soon }) {
+  const button = el('button', { class: 'item', role: 'menuitem', disabled: !!soon },
+    icon(ICONS[iconName]),
+    el('span', { class: 'label' }, label),
+    soon ? el('span', { class: 'soon' }, 'Soon') : (shortcut ? el('kbd', {}, shortcut) : null));
+  if (!soon) button.addEventListener('click', () => send(cmd));
+  return button;
+}
+
+function renderMenu() {
+  const zoom = state.zoom || 100;
+  const full = !!state.fullscreen;
+  card.append(
+    menuItem({ label: 'New tab', iconName: 'newTab', shortcut: k('⌘T', 'Ctrl+T'), cmd: 'newTab' }),
+    menuItem({ label: 'New window', iconName: 'window', soon: true }),
+    menuItem({ label: 'New private window', iconName: 'private', soon: true }),
+    el('div', { class: 'sep', role: 'separator' }),
+    menuItem({ label: 'History', iconName: 'history', soon: true }),
+    menuItem({ label: 'Downloads', iconName: 'download', cmd: 'openDownloads' }),
+    menuItem({ label: 'Bookmarks', iconName: 'star', soon: true }),
+    el('div', { class: 'sep', role: 'separator' }),
+    el('div', { class: 'zoom', role: 'group', 'aria-label': 'Zoom' },
+      icon(ICONS.zoom),
+      el('span', { class: 'label' }, 'Zoom'),
+      el('div', { class: 'stepper' },
+        el('button', { role: 'menuitem', 'aria-label': 'Zoom out', on: { click: () => send('zoomOut') } }, icon(ICONS.minus, 13, { 'stroke-width': 2.4 })),
+        el('button', { class: 'value', role: 'menuitem', 'aria-label': `Reset zoom, currently ${zoom}%`, on: { click: () => send('zoomReset') } }, `${zoom}%`),
+        el('button', { role: 'menuitem', 'aria-label': 'Zoom in', on: { click: () => send('zoomIn') } }, icon(ICONS.plus, 13, { 'stroke-width': 2.4 }))),
+      el('button', {
+        class: 'square', role: 'menuitem',
+        'aria-label': full ? 'Exit full screen' : 'Enter full screen',
+        title: full ? 'Exit full screen' : 'Enter full screen',
+        on: { click: () => send('toggleFullscreen') },
+      }, icon(full ? ICONS.exitFullscreen : ICONS.fullscreen, 14, { 'stroke-width': 2.2 }))),
+    el('div', { class: 'sep', role: 'separator' }),
+    menuItem({ label: 'Find on page', iconName: 'find', soon: true }),
+    menuItem({ label: 'Print…', iconName: 'print', shortcut: k('⌘P', 'Ctrl+P'), cmd: 'print' }),
+    devtoolsRow(),
+    el('div', { class: 'sep', role: 'separator' }),
+    menuItem({ label: 'Settings', iconName: 'settings', soon: true }),
+    menuItem({ label: 'About Rustium', iconName: 'about', soon: true }),
+    menuItem({ label: isMac ? 'Quit Rustium' : 'Exit', iconName: 'quit', shortcut: k('⌘Q', ''), cmd: 'quit' }),
+  );
+  card.setAttribute('role', 'menu');
+  card.setAttribute('aria-label', 'Main menu');
+}
+
+/** "Developer tools" opens or closes them; the segmented control picks where. */
+function devtoolsRow() {
+  const dock = state.devtoolsDock || 'right';
+  const open = !!state.devtoolsOpen;
+  const shortcut = k('⌥⌘I', 'Ctrl+Shift+I');
+  const toggle = el('button', {
+    class: 'item grow', role: 'menuitem',
+    title: `${open ? 'Close' : 'Open'} developer tools (${shortcut})`,
+    on: { click: () => send('devTools') },
+  }, icon(ICONS.code), el('span', { class: 'label' }, open ? 'Close developer tools' : 'Developer tools'));
+  const option = (value, label, shapes) => el('button', {
+    role: 'menuitemradio',
+    'aria-checked': String(dock === value),
+    'aria-label': label,
+    title: label,
+    class: dock === value ? 'on' : '',
+    on: { click: () => send('setDevtoolsDock', { dock: value }) },
+  }, icon(shapes, 14, { 'stroke-width': 2 }));
+  return el('div', { class: 'devtools', role: 'group', 'aria-label': 'Developer tools' },
+    toggle,
+    el('div', { class: 'stepper dock' },
+      option('right', 'Dock to right', ICONS.dockRight),
+      option('bottom', 'Dock to bottom', ICONS.dockBottom),
+      option('window', 'Separate window', ICONS.dockWindow)));
+}
+
+// ---------------------------------------------------------------------------
+// Downloads (Downloads.dc.html)
+// ---------------------------------------------------------------------------
+
+function formatBytes(n) {
+  if (!(n >= 0)) return '';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  while (n >= 1000 && i < units.length - 1) { n /= 1000; i += 1; }
+  const digits = n < 10 && i > 0 ? 1 : 0;
+  return `${n.toFixed(digits)} ${units[i]}`;
+}
+
+function formatEta(seconds) {
+  if (!isFinite(seconds) || seconds <= 0) return '';
+  if (seconds < 60) return `${Math.ceil(seconds)} s left`;
+  if (seconds < 3600) return `${Math.ceil(seconds / 60)} min left`;
+  return `${Math.floor(seconds / 3600)} h ${Math.ceil((seconds % 3600) / 60)} min left`;
+}
+
+/** Colored tile with the file extension (TAR, DMG, ZIP, PDF…). */
+function fileTile(name, muted) {
+  const ext = (/\.([a-z0-9]{1,8})$/i.exec(name) || [, ''])[1].toLowerCase();
+  const groups = [
+    [['zip', '7z', 'rar'], '94,230,184', '#5ee6b8'],
+    [['tar', 'gz', 'tgz', 'bz2', 'xz', 'zst'], '96,165,250', '#60a5fa'],
+    [['dmg', 'pkg', 'app', 'exe', 'msi', 'deb', 'rpm', 'appimage'], '167,139,250', '#a78bfa'],
+    [['pdf'], '255,138,128', '#ff8a80'],
+    [['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'heic'], '251,191,36', '#fbbf24'],
+  ];
+  const group = groups.find(([exts]) => exts.includes(ext));
+  const tile = el('span', { class: 'tile', 'aria-hidden': 'true' }, (ext || 'file').slice(0, 4).toUpperCase());
+  if (group && !muted) {
+    tile.style.background = `rgba(${group[1]},.16)`;
+    tile.style.color = group[2];
+  } else {
+    tile.style.background = 'rgba(255,255,255,.05)';
+    tile.style.color = 'var(--disabled-text)';
+  }
+  return tile;
+}
+
+function iconButton(label, iconName, onClick, size = 14) {
+  return el('button', { class: 'icon-btn', 'aria-label': label, title: label, on: { click: (e) => { e.stopPropagation(); onClick(); } } },
+    icon(ICONS[iconName], size, { 'stroke-width': iconName === 'folder' ? 2 : 2.4 }));
+}
+
+function downloadRow(d) {
+  const act = (action) => send('download', { id: d.id, action });
+  const row = el('li', { class: `dl ${d.status}` });
+  const name = el('span', { class: 'name', title: d.name }, d.name);
+  const known = d.total > 0;
+  const percent = known ? Math.min(100, Math.round((d.received / d.total) * 100)) : 0;
+
+  if (d.status === 'progress' || d.status === 'paused') {
+    row.classList.add('active');
+    const parts = d.status === 'paused'
+      ? ['Paused', known ? `${formatBytes(d.received)} of ${formatBytes(d.total)}` : formatBytes(d.received)]
+      : [known ? `${formatBytes(d.received)} of ${formatBytes(d.total)}` : formatBytes(d.received),
+         d.speed > 0 ? `${formatBytes(d.speed)}/s` : '',
+         known && d.speed > 0 ? formatEta((d.total - d.received) / d.speed) : ''];
+    const bar = el('div', { class: 'bar', role: 'progressbar', 'aria-label': 'Download progress', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': percent },
+      el('div', { style: `width: ${known ? percent : 4}%` }));
+    row.append(fileTile(d.name),
+      el('div', { class: 'body' }, name, bar, el('span', { class: 'meta' }, parts.filter(Boolean).join(' · '))),
+      el('div', { class: 'actions' },
+        d.status === 'paused'
+          ? iconButton('Resume', 'play', () => act('resume'))
+          : iconButton('Pause', 'pause', () => act('pause')),
+        iconButton('Cancel', 'close', () => act('cancel'), 13)));
+  } else if (d.status === 'complete') {
+    row.classList.add('openable');
+    row.title = 'Open';
+    row.addEventListener('click', () => act('open'));
+    const meta = el('span', { class: 'meta' },
+      icon(ICONS.check, 12, { stroke: 'var(--success)', 'stroke-width': 2.6 }),
+      `${formatBytes(known ? d.total : d.received)} · Done`);
+    row.append(fileTile(d.name), el('div', { class: 'body' }, name, meta),
+      iconButton(isMac ? 'Show in Finder' : 'Show in folder', 'folder', () => act('show'), 15));
+  } else if (d.status === 'failed') {
+    row.append(fileTile(d.name),
+      el('div', { class: 'body' }, name, el('span', { class: 'meta danger' }, `Failed — ${d.error || 'download failed'}`)),
+      el('button', { class: 'text-btn', on: { click: () => act('retry') } }, 'Retry'));
+  } else {
+    row.append(fileTile(d.name, true),
+      el('div', { class: 'body' }, name, el('span', { class: 'meta' }, 'Cancelled')),
+      iconButton('Retry download', 'retry', () => act('retry')));
+  }
+  return row;
+}
+
+function renderDownloads() {
+  const list = state.downloads || [];
+  card.append(el('div', { class: 'head' }, el('h2', { id: 'dl-title' }, 'Downloads')));
+  if (list.length === 0) {
+    card.append(el('div', { class: 'empty' }, 'Files you download appear here.'));
+  } else {
+    card.append(el('ul', { id: 'list', 'aria-label': 'Recent downloads' }, ...list.map(downloadRow)));
+  }
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-labelledby', 'dl-title');
+}
+
+// ---------------------------------------------------------------------------
+// Rendering and size
+// ---------------------------------------------------------------------------
+
+function render() {
+  const kind = state.popup;
+  if (!kind) {
+    card.hidden = true;
+    card.textContent = '';
+    shownKind = null;
+    lastSize = '';
+    return;
+  }
+  const scroll = document.getElementById('list')?.scrollTop || 0;
+  card.textContent = '';
+  card.className = kind;
+  card.hidden = false;
+  if (kind === 'menu') renderMenu();
+  else if (kind === 'downloads') renderDownloads();
+  const list = document.getElementById('list');
+  if (list) list.scrollTop = scroll;
+
+  if (shownKind !== kind) {
+    shownKind = kind;
+    lastSize = '';
+    card.focus({ preventScroll: true });
+  }
+  // Rust places and shows the overlay once it knows the size.
+  const margin = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--margin'));
+  const width = card.offsetWidth + margin * 2;
+  const height = card.offsetHeight + margin * 2;
+  const size = `${width}x${height}`;
+  if (size !== lastSize) {
+    lastSize = size;
+    send('popupSize', { width, height });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard and focus
+// ---------------------------------------------------------------------------
+
+function focusables() {
+  return [...card.querySelectorAll('button:not(:disabled)')];
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!state.popup) return;
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    send('focusContent');
+    return;
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const items = focusables();
+    if (items.length === 0) return;
+    const i = items.indexOf(document.activeElement);
+    const next = e.key === 'ArrowDown'
+      ? items[(i + 1 + items.length) % items.length]
+      : items[(i - 1 + items.length) % items.length];
+    next.focus();
+  }
+});
+
+// Clicking anywhere else (the page, the toolbar) takes focus away: close.
+window.addEventListener('blur', () => {
+  if (state.popup) send('closePopup');
+});
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+for (const type of ['dragover', 'drop']) {
+  document.addEventListener(type, (e) => e.preventDefault());
+}
+
+query('ready')
+  .then((json) => window.rustium.update(JSON.parse(json)))
+  .catch((err) => console.error(err.message));
+</script>
+</body>
+</html>

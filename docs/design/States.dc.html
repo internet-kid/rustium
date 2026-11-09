@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rustium — Tab and address bar states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#b4abff}a:hover{color:#d4ceff}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 1200px; box-sizing: border-box; padding: 48px; display: flex; flex-direction: column; gap: 24px; background: #0e0f13; color: #eceef3; font-family: Geist, system-ui, sans-serif; font-size: 13px; overflow: hidden">
+
+  <header style="height: 56px; flex: none; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em">Tab &amp; address bar states</h1>
+    <p style="margin: 0; font-size: 13.5px; color: #9aa0ad">Each sample sits on a piece of the real tab strip or navigation bar.</p>
+  </header>
+
+  <!-- (a) Tabs -->
+  <section aria-labelledby="s-tabs" style="flex: none; background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+    <h2 id="s-tabs" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Tabs</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px">
+      <!-- Active -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Active</span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="true" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: #1d2027; color: #eceef3">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">D</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500">cef — Rust bindings for CEF</span>
+              <button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Inactive -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Inactive</span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #f97316; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">C</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">crates.io: Rust Package Registry</span>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Hover -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Inactive, hover <span style="color: #6b7180">· close appears</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: rgba(255,255,255,.05); color: #c9cdd6">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #f97316; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">C</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">crates.io: Rust Package Registry</span>
+              <button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Loading -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Loading <span style="color: #6b7180">· spinner replaces favicon</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" aria-busy="true" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+              <span aria-hidden="true" style="width: 12px; height: 12px; margin: 0 2px; border-radius: 50%; border: 2px solid rgba(255,255,255,.1); border-top-color: {{accent}}; box-sizing: border-box; flex: none"></span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Loading…</span>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- No favicon -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">No favicon <span style="color: #6b7180">· globe</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">localhost:8080</span>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Playing sound -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Playing sound <span style="color: #6b7180">· mute button</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">V</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">RustConf 2026 — Keynote</span>
+              <button aria-label="Mute tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"></path><path d="M17 9a4 4 0 0 1 0 6"></path></svg></button>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Muted -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Muted <span style="color: #6b7180">· click to unmute</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">V</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">RustConf 2026 — Keynote</span>
+              <button aria-label="Unmute tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"></path><path d="M17 9.5l5 5M22 9.5l-5 5"></path></svg></button>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Long title -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Long title <span style="color: #6b7180">· ellipsis</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="true" title="How to share state between CEF callbacks without deadlocks — The Rust Programming Language Forum" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: #1d2027; color: #eceef3">
+              <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #b45309; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">R</span>
+              <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500">How to share state between CEF callbacks without deadlocks — The Rust Programming Language Forum</span>
+              <button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+            </div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 470px 1fr 246px; gap: 16px">
+      <!-- Many tabs: narrow -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Many tabs <span style="color: #6b7180">· icon only; active keeps close</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="false" aria-label="cef — Rust bindings for CEF" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">D</span></div>
+            <div role="tab" aria-selected="false" aria-label="crates.io" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #f97316; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">C</span></div>
+            <div role="tab" aria-selected="false" aria-label="tauri-apps/cef-rs" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #16a34a; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">G</span></div>
+            <div role="tab" aria-selected="true" aria-label="Rust Programming Language Forum" style="width: 56px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: #1d2027; color: #eceef3"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #b45309; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">R</span><button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button></div>
+            <div role="tab" aria-selected="false" aria-label="RustConf 2026 — Keynote" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">V</span></div>
+            <div role="tab" aria-selected="false" aria-label="MDN Web Docs" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #0ea5e9; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">M</span></div>
+            <div role="tab" aria-selected="false" aria-label="Loading" aria-busy="true" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,.1); border-top-color: {{accent}}; box-sizing: border-box"></span></div>
+            <div role="tab" aria-selected="false" aria-label="Stack Overflow" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #a855f7; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">S</span></div>
+            <div role="tab" aria-selected="false" aria-label="localhost:8080" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0; color: #9aa0ad"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg></div>
+            <div role="tab" aria-selected="false" aria-label="Hacker News" style="width: 36px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #ea580c; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">Y</span></div>
+            <button aria-label="New tab" style="width: 28px; height: 28px; margin: 0 0 3px 2px; flex: none; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Overflow -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="font-size: 12px; color: #c9cdd6">Overflow <span style="color: #6b7180">· min width reached, scroll arrows and fades</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <button aria-label="Scroll tabs left" style="width: 24px; height: 28px; margin-bottom: 3px; flex: none; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+            <div style="position: relative; flex: 1; min-width: 0; height: 32px; overflow: hidden">
+              <div role="tablist" aria-label="Tabs" style="display: flex; align-items: flex-end; gap: 2px; margin-left: -56px">
+                <div role="tab" aria-selected="false" style="width: 140px; height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #16a34a; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">G</span><span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">tauri-apps/cef-rs</span></div>
+                <div role="tab" aria-selected="false" style="width: 140px; height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #0ea5e9; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">M</span><span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">MDN Web Docs</span></div>
+                <div role="tab" aria-selected="true" style="width: 140px; height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: #1d2027; color: #eceef3"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">D</span><span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500">cef — Rust bindings</span><button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button></div>
+                <div role="tab" aria-selected="false" style="width: 140px; height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #a855f7; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">S</span><span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Stack Overflow</span></div>
+              </div>
+              <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 32px; height: 32px; background: linear-gradient(to right, #0e0f13, rgba(14,15,19,0))"></div>
+              <div aria-hidden="true" style="position: absolute; right: 0; top: 0; width: 32px; height: 32px; background: linear-gradient(to left, #0e0f13, rgba(14,15,19,0))"></div>
+            </div>
+            <button aria-label="Scroll tabs right" style="width: 24px; height: 28px; margin-bottom: 3px; flex: none; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+            <button aria-label="New tab" style="width: 28px; height: 28px; margin: 0 0 3px 0; flex: none; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+      <!-- Pinned -->
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #c9cdd6">Pinned tabs <span style="font-size: 10.5px; padding: 1px 6px; border-radius: 5px; background: #2a2e37; color: #9aa0ad">P2</span></span>
+        <div style="border-radius: 10px; overflow: hidden; background: #0e0f13; border: 1px solid rgba(255,255,255,.06)">
+          <div role="tablist" aria-label="Tabs" style="height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px">
+            <div role="tab" aria-selected="true" aria-label="Pinned: Gmail" style="width: 40px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0; background: #1d2027"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #e11d48; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">M</span></div>
+            <div role="tab" aria-selected="false" aria-label="Pinned: Calendar" style="width: 40px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 9px 9px 0 0"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #2563eb; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center">31</span></div>
+            <span aria-hidden="true" style="width: 1px; height: 16px; margin: 0 4px 8px; flex: none; background: rgba(255,255,255,.12)"></span>
+            <div role="tab" aria-selected="false" style="width: 130px; height: 32px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad"><span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">D</span><span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">cef — Rust bindings</span></div>
+          </div>
+          <div style="height: 8px; background: #1d2027"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 260px; gap: 24px; align-items: start">
+
+    <!-- (b) Address bar -->
+    <section aria-labelledby="s-address" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+      <h2 id="s-address" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Address bar</h2>
+      <div style="display: grid; grid-template-columns: 130px 720px; column-gap: 14px; row-gap: 12px; align-items: center">
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Empty</span><span style="font-size: 11px; color: #6b7180">new tab, placeholder</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <span aria-hidden="true" style="width: 26px; flex: none; display: grid; place-items: center; color: #9aa0ad"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></span>
+            <input type="text" aria-label="Address" placeholder="Search or enter address" style="flex: 1; min-width: 0; border: 0; outline: none; padding: 0; background: transparent; color: #eceef3; font: inherit; font-size: 13.5px">
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Focused</span><span style="font-size: 11px; color: #6b7180">accent ring, caret</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419; box-shadow: 0 0 0 2px #1d2027, 0 0 0 4px {{accent}}">
+            <span aria-hidden="true" style="width: 26px; flex: none; display: grid; place-items: center; color: #c9cdd6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></span>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span aria-hidden="true" style="width: 1.5px; height: 17px; margin-right: 1px; background: {{accent}}"></span><span style="color: #6b7180">Search or enter address</span>
+            </label>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Typing</span><span style="font-size: 11px; color: #6b7180">inline completion selected</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419; box-shadow: 0 0 0 2px #1d2027, 0 0 0 4px {{accent}}">
+            <span aria-hidden="true" style="width: 26px; flex: none; display: grid; place-items: center; color: #c9cdd6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></span>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #eceef3">docs.r</span><span style="color: #eceef3; background: {{accentSoft}}; border-radius: 2px; box-shadow: inset 0 -1px 0 {{accent}}">s/cef/156.4.0/cef/</span>
+            </label>
+            <span style="font-size: 12px; color: #9aa0ad; white-space: nowrap">Tab to accept</span>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Secure (https)</span><span style="font-size: 11px; color: #6b7180">lock, bright domain</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Connection is secure — site information" style="height: 24px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: flex; align-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #9aa0ad">https://</span><span style="color: #eceef3">docs.rs</span><span style="color: #9aa0ad">/cef/156.4.0/cef/</span>
+            </label>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Not secure (http)</span><span style="font-size: 11px; color: #6b7180">warning chip</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Not secure — site information" style="height: 22px; padding: 0 8px; border: 0; border-radius: 6px; background: rgba(251,191,36,.12); color: #fbbf24; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 500"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.5 20h19z"></path><path d="M12 10v4M12 17v.01"></path></svg>Not secure</button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #9aa0ad">http://</span><span style="color: #eceef3">neverssl.com</span><span style="color: #9aa0ad">/online</span>
+            </label>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Certificate error</span><span style="font-size: 11px; color: #6b7180">danger chip, struck https</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Not secure, certificate error — site information" style="height: 22px; padding: 0 8px; border: 0; border-radius: 6px; background: rgba(255,138,128,.14); color: #ff8a80; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 500"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.5-1.9"></path><path d="M3 3l18 18"></path></svg>Not secure</button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <s style="color: #ff8a80">https</s><span style="color: #9aa0ad">://</span><span style="color: #eceef3">expired.badssl.com</span><span style="color: #9aa0ad">/</span>
+            </label>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Rustium page</span><span style="font-size: 11px; color: #6b7180">rustium:// service page</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Rustium page — site information" style="height: 22px; padding: 0 8px; border: 0; border-radius: 6px; background: #22252d; color: #c9cdd6; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 500"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.4" stroke-linejoin="round"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"></path></svg>Rustium</button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #9aa0ad">rustium://</span><span style="color: #eceef3">history</span>
+            </label>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Permissions in use</span><span style="font-size: 11px; color: #6b7180">camera, mic, location</span></div>
+        <div style="height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Connection is secure — site information" style="height: 24px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: flex; align-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #9aa0ad">https://</span><span style="color: #eceef3">meet.example.com</span><span style="color: #9aa0ad">/abc-defg-hij</span>
+            </label>
+            <div style="height: 24px; display: flex; align-items: center; gap: 1px; padding: 0 2px; border-radius: 7px; background: {{accentSoft}}">
+              <button aria-label="Using your camera" style="width: 22px; height: 20px; border: 0; padding: 0; border-radius: 6px; background: transparent; color: {{accent}}; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="M16 10l5-3v10l-5-3"></path></svg></button>
+              <button aria-label="Using your microphone" style="width: 22px; height: 20px; border: 0; padding: 0; border-radius: 6px; background: transparent; color: {{accent}}; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+              <button aria-label="Using your location" style="width: 22px; height: 20px; border: 0; padding: 0; border-radius: 6px; background: transparent; color: {{accent}}; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.5" r="2.5"></circle></svg></button>
+            </div>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Loading</span><span style="font-size: 11px; color: #6b7180">stop button, progress line</span></div>
+        <div style="position: relative; height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-radius: 10px; background: #1d2027; overflow: hidden">
+          <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+          <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+          <button aria-label="Stop loading" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+          <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+            <button aria-label="Connection is secure — site information" style="height: 24px; padding: 0 7px; border: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: flex; align-items: center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+            <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+              <span style="color: #9aa0ad">https://</span><span style="color: #eceef3">github.com</span><span style="color: #9aa0ad">/tauri-apps/cef-rs</span>
+            </label>
+            <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+          </div>
+          <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+          <div role="progressbar" aria-label="Page loading" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="position: absolute; left: 0; bottom: 0; width: 40%; height: 2px; background: {{accent}}"></div>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <!-- (c) Bookmark star -->
+      <section aria-labelledby="s-star" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <h2 id="s-star" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Bookmark star</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <div style="width: 100%; height: 34px; display: grid; place-items: center; border-radius: 9px; background: #121419">
+              <button aria-label="Bookmark this page" aria-pressed="false" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+            </div>
+            <span style="font-size: 11px; color: #9aa0ad">Empty</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <div style="width: 100%; height: 34px; display: grid; place-items: center; border-radius: 9px; background: #121419">
+              <button aria-label="Bookmark this page" aria-pressed="false" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: rgba(255,255,255,.06); color: #eceef3; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+            </div>
+            <span style="font-size: 11px; color: #9aa0ad">Hover</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+            <div style="width: 100%; height: 34px; display: grid; place-items: center; border-radius: 9px; background: #121419">
+              <button aria-label="Edit bookmark" aria-pressed="true" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: {{accent}}; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+            </div>
+            <span style="font-size: 11px; color: #9aa0ad">Bookmarked</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- (d) Downloads button -->
+      <section aria-labelledby="s-dl" style="background: #16181e; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <h2 id="s-dl" style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #9aa0ad">Downloads button</h2>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 104px; height: 42px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: #1d2027">
+            <span aria-hidden="true" style="width: 30px; height: 30px; box-sizing: border-box; border-radius: 8px; border: 1px dashed rgba(255,255,255,.1)"></span>
+            <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">None</span><span style="font-size: 11px; color: #6b7180">hidden until first download</span></div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 104px; height: 42px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: #1d2027">
+            <button aria-label="Downloads — 1 in progress, 45%" style="position: relative; width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center">
+              <svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" style="position: absolute; left: 1px; top: 1px"><circle cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="2"></circle><circle cx="14" cy="14" r="12" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-dasharray="33.9 75.4" transform="rotate(-90 14 14)"></circle></svg>
+              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+            </button>
+            <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">In progress</span><span style="font-size: 11px; color: #6b7180">ring shows total, 45%</span></div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 104px; height: 42px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: #1d2027">
+            <button aria-label="Downloads — complete" style="position: relative; width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+              <span aria-hidden="true" style="position: absolute; right: 2px; bottom: 2px; width: 12px; height: 12px; box-sizing: border-box; border-radius: 50%; background: #5ee6b8; border: 2px solid #1d2027; display: grid; place-items: center"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="#0e0f13" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span>
+            </button>
+            <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Complete</span><span style="font-size: 11px; color: #6b7180">check badge until opened</span></div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 104px; height: 42px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: #1d2027">
+            <button aria-label="Downloads — 1 failed" style="position: relative; width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+              <span aria-hidden="true" style="position: absolute; right: 2px; bottom: 2px; width: 12px; height: 12px; box-sizing: border-box; border-radius: 50%; background: #ff8a80; border: 2px solid #1d2027; color: #0e0f13; font-size: 8px; font-weight: 700; line-height: 8px; text-align: center">!</span>
+            </button>
+            <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #c9cdd6">Failed</span><span style="font-size: 11px; color: #6b7180">danger badge</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8b7cff","options":["#8b7cff","#5ee6b8","#60a5fa","#ff8a65"]},"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8b7cff';
+    return { accent, accentSoft: accent + '2e' };
+  }
+}
+</script>
+</body>
+</html>

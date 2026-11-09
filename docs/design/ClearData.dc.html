@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rustium — Clear browsing data</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#b4abff}a:hover{color:#d4ceff}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 840px; display: flex; flex-direction: column; background: #0e0f13; color: #eceef3; font-family: Geist, system-ui, sans-serif; font-size: 13px; border-radius: 12px; overflow: hidden">
+
+  <div style="position: relative; height: 38px; display: flex; align-items: flex-end; gap: 2px; padding: 0 8px 0 104px; flex: none">
+    <div aria-hidden="true" style="position: absolute; left: 16px; top: 13px; display: flex; gap: 8px">
+      <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f57"></span>
+      <span style="width: 12px; height: 12px; border-radius: 50%; background: #febc2e"></span>
+      <span style="width: 12px; height: 12px; border-radius: 50%; background: #28c840"></span>
+    </div>
+    <div role="tablist" aria-label="Tabs" style="display: flex; align-items: flex-end; gap: 2px; min-width: 0">
+      <div role="tab" aria-selected="false" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; color: #9aa0ad">
+        <span aria-hidden="true" style="width: 16px; height: 16px; border-radius: 4px; background: #3b82f6; color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none">D</span>
+        <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">cef — Rust bindings for CEF</span>
+      </div>
+      <div role="tab" aria-selected="true" style="width: 220px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 12px; box-sizing: border-box; border-radius: 9px 9px 0 0; background: #1d2027; color: #eceef3">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>
+        <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500">Settings</span>
+        <button aria-label="Close tab" style="width: 20px; height: 20px; flex: none; border: 0; padding: 0; border-radius: 6px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+      </div>
+    </div>
+    <button aria-label="New tab" style="width: 28px; height: 28px; margin: 0 0 3px 2px; flex: none; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+  </div>
+
+  <div style="position: relative; height: 42px; display: flex; align-items: center; gap: 2px; padding: 0 8px; background: #1d2027; flex: none">
+    <button aria-label="Back" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+    <button aria-label="Forward" disabled="" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #4a4f5c; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+    <button aria-label="Reload" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><path d="M21 4v5h-5"></path></svg></button>
+    <div style="flex: 1; min-width: 0; height: 30px; margin: 0 6px; padding: 0 6px 0 4px; display: flex; align-items: center; gap: 6px; border-radius: 9px; background: #121419">
+      <button aria-label="Rustium page — site information" style="height: 22px; padding: 0 8px; border: 0; border-radius: 6px; background: #22252d; color: #c9cdd6; display: flex; align-items: center; gap: 6px; font: inherit; font-size: 12px; font-weight: 500"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2.4" stroke-linejoin="round"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"></path></svg>Rustium</button>
+      <label style="flex: 1; min-width: 0; display: flex; align-items: center; font-size: 13.5px; white-space: nowrap; overflow: hidden">
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Address</span>
+        <span style="color: #9aa0ad">rustium://</span><span style="color: #eceef3">settings</span><span style="color: #9aa0ad">/privacy</span>
+      </label>
+      <button aria-label="Bookmark this page" style="width: 26px; height: 26px; border: 0; padding: 0; border-radius: 7px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></button>
+    </div>
+    <button aria-label="Downloads" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg></button>
+    <button aria-label="Main menu" style="width: 30px; height: 30px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #c9cdd6; display: grid; place-items: center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+  </div>
+
+  <main style="position: relative; flex: 1; min-height: 0; display: flex; background: #16181e; border-top: 1px solid rgba(255,255,255,.05)">
+    <nav aria-label="Rustium pages" style="width: 248px; flex: none; padding: 20px 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 1px; background: #121419; border-right: 1px solid rgba(255,255,255,.05)">
+      <div style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; margin-bottom: 8px">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M24 3l18.2 10.5v21L24 45 5.8 34.5v-21z" fill="{{accent}}"></path><path d="M24 14l8.7 5v10L24 34l-8.7-5V19z" fill="#121419"></path></svg>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.02em">Rustium</span>
+      </div>
+      <label style="height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; margin-bottom: 12px; border-radius: 8px; background: #1d2027; color: #9aa0ad">
+        <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search settings</span>
+        <input type="search" placeholder="Search settings" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #eceef3; font: inherit; font-size: 13px">
+      </label>
+
+      <div style="padding: 0 10px 6px; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #9aa0ad">Settings</div>
+      <a href="#general" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>General</a>
+      <a href="#appearance" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"></path></svg>Appearance</a>
+      <a href="#search" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>Search engine</a>
+      <a href="#privacy" aria-current="page" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; background: {{accentSoft}}; color: #eceef3; text-decoration: none; font-weight: 500"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"></path></svg>Privacy &amp; security</a>
+      <a href="#permissions" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="M16 10l5-3v10l-5-3"></path></svg>Site permissions</a>
+      <a href="#downloads-settings" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>Downloads</a>
+      <a href="#system" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg>System</a>
+      <a href="#about" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"></path></svg>About Rustium</a>
+
+      <div style="padding: 14px 10px 6px; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #9aa0ad">Your data</div>
+      <a href="#history" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>History</a>
+      <a href="#downloads" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>Downloads</a>
+      <a href="#bookmarks" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg>Bookmarks</a>
+      <a href="#cookies" style="height: 32px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 8px; color: #c9cdd6; text-decoration: none"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5A9 9 0 1 1 11.5 3a3 3 0 0 0 4 4 3 3 0 0 0 5.5 5.5z"></path><path d="M8.5 9.5v.01M15.5 15.5v.01M10 15v.01"></path></svg>Cookies &amp; site data</a>
+
+      <div style="padding: 14px 10px 6px; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #9aa0ad">Coming later</div>
+      <div aria-disabled="true" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; color: #6b7180"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9M17 6l3 3"></path></svg><span style="flex: 1">Passwords</span><span style="font-size: 10.5px; padding: 1px 6px; border-radius: 5px; background: #1d2027; color: #9aa0ad">Soon</span></div>
+      <div aria-disabled="true" style="height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; color: #6b7180"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M10 3h4v3a2 2 0 1 0 4 0V3h3v7h-3a2 2 0 1 0 0 4h3v7h-7v-3a2 2 0 1 0-4 0v3H3v-7h3a2 2 0 1 0 0-4H3V3z"></path></svg><span style="flex: 1">Extensions</span><span style="font-size: 10.5px; padding: 1px 6px; border-radius: 5px; background: #1d2027; color: #9aa0ad">Soon</span></div>
+    </nav>
+
+    <section aria-labelledby="page-title" inert="" style="flex: 1; min-width: 0; overflow: hidden; padding: 36px 56px; box-sizing: border-box">
+      <div style="max-width: 720px; display: flex; flex-direction: column; gap: 28px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 id="page-title" style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em">Privacy &amp; security</h1>
+          <p style="margin: 0; font-size: 13.5px; color: #9aa0ad">Cookies, tracking protection and browsing data.</p>
+        </div>
+
+        <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+          <legend style="padding: 0 0 10px; font-size: 13px; font-weight: 600; color: #eceef3">Cookies</legend>
+          <div style="display: flex; flex-direction: column; border-radius: 12px; background: #1d2027; border: 1px solid rgba(255,255,255,.06)">
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.06)">
+              <input type="radio" name="cookies" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+              <span style="flex: 1; font-size: 13.5px">Allow all cookies</span>
+            </label>
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.06)">
+              <input type="radio" name="cookies" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+              <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13.5px">Block third-party cookies</span><span style="font-size: 12px; color: #9aa0ad">Recommended. Sites can't track you across other sites</span></span>
+            </label>
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px">
+              <input type="radio" name="cookies" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+              <span style="flex: 1; font-size: 13.5px">Block all cookies</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-size: 13px; font-weight: 600">Security</h2>
+          <div style="display: flex; flex-direction: column; border-radius: 12px; background: #1d2027; border: 1px solid rgba(255,255,255,.06)">
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.06)">
+              <span style="flex: 1; font-size: 13.5px">Delete cookies and site data when Rustium closes</span>
+              <input type="checkbox" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+            </label>
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.06)">
+              <span style="flex: 1; font-size: 13.5px">HTTPS-only mode</span>
+              <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+            </label>
+            <label style="min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px">
+              <span style="flex: 1; font-size: 13.5px">Use secure DNS</span>
+              <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+            </label>
+          </div>
+        </div>
+
+        <div style="min-height: 60px; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-radius: 12px; background: #1d2027; border: 1px solid rgba(255,255,255,.06)">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13.5px">Clear browsing data</span><span style="font-size: 12px; color: #9aa0ad">History, cookies, cache and more</span></span>
+          <button style="height: 32px; padding: 0 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: transparent; color: #c9cdd6; font: inherit; font-size: 13px">Clear data…</button>
+        </div>
+      </div>
+    </section>
+
+    <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(8,9,12,.6)"></div>
+
+    <div role="dialog" aria-modal="true" aria-labelledby="clear-title" style="position: absolute; left: 50%; top: 104px; transform: translateX(-50%); width: 460px; box-sizing: border-box; border-radius: 16px; background: #22252d; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 24px 60px rgba(0,0,0,.55); overflow: hidden">
+      <div style="display: flex; align-items: flex-start; gap: 12px; padding: 22px 20px 6px 24px">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+          <h2 id="clear-title" style="margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em">Clear browsing data</h2>
+          <p style="margin: 0; font-size: 12.5px; color: #9aa0ad">Data is removed from this device only.</p>
+        </div>
+        <button aria-label="Close dialog" style="width: 28px; height: 28px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: #9aa0ad; display: grid; place-items: center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 14px 24px 12px">
+        <label for="time-range" style="flex: 1; font-size: 13.5px">Time range</label>
+        <select id="time-range" style="width: 180px; height: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: #16181e; color: #eceef3; font: inherit; font-size: 13px">
+          <option>Last hour</option>
+          <option>Last 24 hours</option>
+          <option selected="">Last 7 days</option>
+          <option>Last 4 weeks</option>
+          <option>All time</option>
+        </select>
+      </div>
+
+      <fieldset style="border: 0; margin: 0 16px; padding: 0; display: flex; flex-direction: column; border-radius: 12px; background: #1d2027; border: 1px solid rgba(255,255,255,.06)">
+        <legend style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Data to clear</legend>
+        <label style="min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,.06)">
+          <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+          <span style="flex: 1; font-size: 13.5px">Browsing history</span>
+          <span style="font-size: 12.5px; color: #9aa0ad; font-variant-numeric: tabular-nums">1,284 items</span>
+        </label>
+        <label style="min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,.06)">
+          <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13.5px">Cookies and site data</span><span style="font-size: 12px; color: #9aa0ad">Signs you out of most sites</span></span>
+          <span style="font-size: 12.5px; color: #9aa0ad; font-variant-numeric: tabular-nums">186 MB</span>
+        </label>
+        <label style="min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,.06)">
+          <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+          <span style="flex: 1; font-size: 13.5px">Cached images and files</span>
+          <span style="font-size: 12.5px; color: #9aa0ad; font-variant-numeric: tabular-nums">412 MB</span>
+        </label>
+        <label style="min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,.06)">
+          <input type="checkbox" checked="" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+          <span style="flex: 1; font-size: 13.5px">Download history</span>
+          <span style="font-size: 12.5px; color: #9aa0ad; font-variant-numeric: tabular-nums">37 items</span>
+        </label>
+        <label style="min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 14px">
+          <input type="checkbox" style="width: 16px; height: 16px; margin: 0; accent-color: {{accent}}">
+          <span style="flex: 1; font-size: 13.5px; color: #c9cdd6">Autofill form data</span>
+          <span style="font-size: 12.5px; color: #9aa0ad; font-variant-numeric: tabular-nums">64 entries</span>
+        </label>
+      </fieldset>
+
+      <div style="display: flex; align-items: center; gap: 8px; padding: 18px 16px 16px 24px">
+        <span style="flex: 1; font-size: 12.5px; color: #9aa0ad">Frees about 598 MB</span>
+        <button style="height: 34px; padding: 0 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; background: transparent; color: #c9cdd6; font: inherit; font-size: 13px; font-weight: 500">Cancel</button>
+        <button style="height: 34px; padding: 0 16px; border: 0; border-radius: 9px; background: #ff8a80; color: #1a0d0b; font: inherit; font-size: 13px; font-weight: 600">Clear data</button>
+      </div>
+    </div>
+
+    <div role="status" style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 14px; border-radius: 12px; background: #2a2e37; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 13px; white-space: nowrap">
+      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5ee6b8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+      Cleared 598 MB from the last 7 days
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#8b7cff","options":["#8b7cff","#5ee6b8","#60a5fa","#ff8a65"]},"$preview":{"width":1280,"height":840}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#8b7cff';
+    return { accent, accentSoft: accent + '2e' };
+  }
+}
+</script>
+</body>
+</html>

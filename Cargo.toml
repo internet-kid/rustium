@@ -1,0 +1,53 @@
+[package]
+name = "rustium"
+version = "0.1.0"
+edition = "2021"
+description = "Прототип браузера на Rust + CEF (Chromium Embedded Framework)"
+license = "MIT OR Apache-2.0"
+default-run = "rustium"
+
+# Основной бинарник: окно браузера. На Linux он же запускается
+# как subprocess (renderer, GPU и т.д.).
+[[bin]]
+name = "rustium"
+path = "src/main.rs"
+
+# Helper-процесс для macOS. CEF на macOS требует отдельные
+# "Rustium Helper*.app" внутри бандла. На Linux не используется.
+[[bin]]
+name = "rustium_helper"
+path = "src/bin/rustium_helper.rs"
+
+# Сборщик бандла: кладёт рядом с бинарником файлы CEF (Linux)
+# или собирает Rustium.app с фреймворком и helper'ами (macOS).
+[[bin]]
+name = "bundle"
+path = "src/bin/bundle.rs"
+
+# Используется cef::build_util при сборке macOS-бандла.
+[package.metadata.cef.bundle]
+helper_name = "rustium_helper"
+
+[dependencies]
+# Версия крейта привязана к версии CEF: 156.4.0 -> CEF 156.0.26 (Chromium 156).
+cef = "=156.4.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+semver = "1"
+# WebSocket-мост между встроенными DevTools и вкладкой (src/devtools_bridge.rs).
+tungstenite = { version = "=0.24.0", default-features = false, features = ["handshake"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.3"
+objc2-foundation = "0.3"
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSApplication",
+    "NSEvent",
+    "NSResponder",
+] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+strip = "debuginfo"
