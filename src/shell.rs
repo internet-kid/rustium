@@ -396,11 +396,18 @@ impl Shell {
             s.content = content.clone();
         }
 
-        if let Some(toolbar) = &toolbar {
-            let mut view = View::from(toolbar);
-            window.add_child_view(Some(&mut view));
-            if let Some(layout) = &layout {
-                layout.set_flex_for_view(Some(&mut view), 0);
+        // Опыт chrome-tab: в окне Chrome-стиля вкладка в Chrome-стиле должна
+        // попасть в окно раньше любого Alloy BrowserView (CEF
+        // browser_view_impl.cc AddedToWidget), поэтому сначала панель
+        // вкладок и первая вкладка, а панель инструментов — потом, наверх.
+        let chrome_tab = views::chrome_tab_experiment();
+        if !chrome_tab {
+            if let Some(toolbar) = &toolbar {
+                let mut view = View::from(toolbar);
+                window.add_child_view(Some(&mut view));
+                if let Some(layout) = &layout {
+                    layout.set_flex_for_view(Some(&mut view), 0);
+                }
             }
         }
         if let Some(content) = &content {
@@ -408,6 +415,16 @@ impl Shell {
             window.add_child_view(Some(&mut view));
             if let Some(layout) = &layout {
                 layout.set_flex_for_view(Some(&mut view), 1);
+            }
+        }
+        if chrome_tab {
+            self.open_tab(None, None, true);
+            if let Some(toolbar) = &toolbar {
+                let mut view = View::from(toolbar);
+                window.add_child_view_at(Some(&mut view), 0);
+                if let Some(layout) = &layout {
+                    layout.set_flex_for_view(Some(&mut view), 0);
+                }
             }
         }
 
@@ -422,7 +439,9 @@ impl Shell {
         if let Some(content) = &content {
             self.create_splitter(content);
         }
-        self.open_tab(None, None, true);
+        if !chrome_tab {
+            self.open_tab(None, None, true);
+        }
         window.show();
         window.activate();
     }

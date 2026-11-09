@@ -51,7 +51,13 @@ wrap_window_delegate! {
         }
 
         fn window_runtime_style(&self) -> RuntimeStyle {
-            RuntimeStyle::ALLOY
+            // Опыт (ветка devtools-native): RUSTIUM_EXPERIMENT=chrome-tab —
+            // окно и первая вкладка в Chrome-стиле, DevTools штатные.
+            if chrome_tab_experiment() {
+                RuntimeStyle::CHROME
+            } else {
+                RuntimeStyle::ALLOY
+            }
         }
 
         // В крейте `cef` эти методы по умолчанию возвращают 0 (в C++ CEF — true),
@@ -179,7 +185,11 @@ wrap_browser_view_delegate! {
         }
 
         fn browser_runtime_style(&self) -> RuntimeStyle {
-            RuntimeStyle::ALLOY
+            if chrome_tab_experiment() && self.tab == 1 {
+                RuntimeStyle::CHROME
+            } else {
+                RuntimeStyle::ALLOY
+            }
         }
     }
 }
@@ -272,4 +282,9 @@ wrap_browser_view_delegate! {
             RuntimeStyle::ALLOY
         }
     }
+}
+
+/// Опыт: штатные DevTools у вкладки в Chrome-стиле (см. docs/devtools-research.md).
+pub fn chrome_tab_experiment() -> bool {
+    std::env::var("RUSTIUM_EXPERIMENT").as_deref() == Ok("chrome-tab")
 }
