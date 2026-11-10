@@ -83,6 +83,22 @@ pub enum Dock {
     Window,
 }
 
+/// Команды служебных страниц `rustium://` во вкладках (страницы ошибок).
+/// Набор узкий: такие страницы не управляют браузером, а только своей
+/// вкладкой, и браузер сам решает, применимо ли действие.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(tag = "cmd", rename_all = "camelCase")]
+pub enum PageCommand {
+    /// Повторить загрузку исходного адреса.
+    Retry,
+    /// Ошибка сертификата: открыть сайт, несмотря на неё.
+    ProceedUnsafe,
+    /// Файл не найден: открыть папку.
+    RevealFile,
+    /// Нет сети: открыть системные настройки сети.
+    NetworkSettings,
+}
+
 /// Какое всплывающее окно показать.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -260,10 +276,25 @@ impl BrowserSideHandler for ToolbarQueryHandler {
             }
         };
 
-        // Принимаем запросы только из главного фрейма панели
-        // или всплывающего окна.
-        let from_ui = browser.as_ref().is_some_and(|b| shell.is_ui_browser(b))
-            && frame.as_ref().is_some_and(|f| f.is_main() != 0);
+        let main_frame = frame.as_ref().is_some_and(|f| f.is_main() != 0);
+        // Служебная страница rustium:// во вкладке: только PageCommand.
+        let service_tab = main_frame
+            && frame
+                .as_ref()
+                .is_some_and(|f| CefString::from(&f.url()).to_string().starts_with("rustium://"));
+        if let (true, Some(tab)) = (service_tab, browser.as_ref().and_then(|b| shell.tab_of(b))) {
+            match serde_json::from_str::<PageCommand>(request) {
+                Ok(command) => {
+                    reply(Ok(String::new()));
+                    post_ui(move || shell.page_command(tab, command));
+                }
+                Err(err) => reply(Err((400, err.to_string()))),
+            }
+            return true;
+        }
+
+        // Остальное — только из главного фрейма панели или всплывающего окна.
+        let from_ui = main_frame && browser.as_ref().is_some_and(|b| shell.is_ui_browser(b));
         let Some(browser) = browser.filter(|_| from_ui) else {
             reply(Err((403, "forbidden".into())));
             return true;
@@ -311,6 +342,16 @@ mod tests {
         let c: Command =
             serde_json::from_str(r#"{"cmd":"setDevtoolsDock","dock":"window"}"#).unwrap();
         assert!(matches!(c, Command::SetDevtoolsDock { dock: Dock::Window }));
+    }
+
+    #[test]
+    fn parses_page_commands() {
+        let c: PageCommand = serde_json::from_str(r#"{"cmd":"proceedUnsafe","url":"x"}"#).unwrap();
+        assert_eq!(c, PageCommand::ProceedUnsafe);
+        assert_eq!(serde_json::from_str::<PageCommand>(r#"{"cmd":"retry"}"#).unwrap(), PageCommand::Retry);
+        // Команды панели со служебной страницы не проходят.
+        assert!(serde_json::from_str::<PageCommand>(r#"{"cmd":"quit"}"#).is_err());
+        assert!(serde_json::from_str::<PageCommand>(r#"{"cmd":"navigate","url":"x"}"#).is_err());
     }
 
     #[test]

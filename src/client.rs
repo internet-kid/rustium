@@ -120,8 +120,9 @@ wrap_client! {
             source_process: ProcessId,
             message: Option<&mut ProcessMessage>,
         ) -> ::std::os::raw::c_int {
-            // IPC-сообщения message router'а приходят только от интерфейса.
-            if !self.role.is_ui() {
+            // IPC-сообщения message router'а приходят от интерфейса и от
+            // служебных страниц rustium:// во вкладках (их проверяет ipc.rs).
+            if !(self.role.is_ui() || matches!(self.role, Role::Tab(_))) {
                 return 0;
             }
             let Some(router) = self.shell.router() else {
@@ -162,7 +163,7 @@ wrap_display_handler! {
             let url = url.map(|u| u.to_string()).unwrap_or_default();
             self.shell.update_tab(id, |tab| {
                 // Ушли со страницы ошибки — забываем её.
-                if tab.error_page.as_ref().is_some_and(|(page, _)| *page != url) {
+                if tab.error_page.is_some() && !ui::is_error_page(&url) {
                     tab.error_page = None;
                     tab.cert_error = false;
                 }
@@ -278,11 +279,13 @@ wrap_load_handler! {
             }
             let text = error_text.map(|t| t.to_string()).unwrap_or_default();
             let failed_url = failed_url.map(|u| u.to_string()).unwrap_or_default();
+            // Не зацикливаемся, если не открылась сама служебная страница.
+            if failed_url.starts_with("rustium://") {
+                return;
+            }
             let code = error_code.get_raw();
-            let details = format!("{text} ({code})");
-            // Ошибки сертификатов в Chromium — коды от -200 до -299.
-            let cert_error = (-299..=-200).contains(&code);
-            self.shell.show_load_error(id, frame, &details, &failed_url, cert_error);
+            let code_name = if text.is_empty() { format!("ERR_{}", -code) } else { text };
+            self.shell.show_load_error(id, frame, code, &code_name, &failed_url);
         }
     }
 }
@@ -340,6 +343,24 @@ wrap_life_span_handler! {
     }
 }
 
+/// Имя причины падения renderer для страницы «вкладка упала».
+fn termination_name(status: TerminationStatus) -> &'static str {
+    let raw = status.get_raw();
+    if raw == TerminationStatus::PROCESS_WAS_KILLED.get_raw() {
+        "RESULT_CODE_KILLED"
+    } else if raw == TerminationStatus::PROCESS_CRASHED.get_raw() {
+        "RESULT_CODE_CRASHED"
+    } else if raw == TerminationStatus::PROCESS_OOM.get_raw() {
+        "RESULT_CODE_OUT_OF_MEMORY"
+    } else if raw == TerminationStatus::LAUNCH_FAILED.get_raw() {
+        "RESULT_CODE_LAUNCH_FAILED"
+    } else if raw == TerminationStatus::INTEGRITY_FAILURE.get_raw() {
+        "RESULT_CODE_INTEGRITY_FAILURE"
+    } else {
+        "RESULT_CODE_ABNORMAL_TERMINATION"
+    }
+}
+
 fn open_in_new_tab(
     shell: &Arc<Shell>,
     opener: TabId,
@@ -380,6 +401,13 @@ wrap_request_handler! {
             _is_redirect: ::std::os::raw::c_int,
         ) -> ::std::os::raw::c_int {
             let Some(allowed) = self.role.ui_url() else {
+                // Вкладка уходит со страницы: незавершённые cefQuery
+                // служебной страницы отменяются.
+                if matches!(self.role, Role::Tab(_)) {
+                    if let Some(router) = self.shell.router() {
+                        router.on_before_browse(browser.cloned(), frame.cloned());
+                    }
+                }
                 return 0;
             };
             // Интерфейс может показывать только сам себя: никакие ссылки,
@@ -393,6 +421,40 @@ wrap_request_handler! {
             }
             if let Some(router) = self.shell.router() {
                 router.on_before_browse(browser.cloned(), frame.cloned());
+            }
+            0
+        }
+
+        // Плохой сертификат: если пользователь уже выбрал «Перейти
+        // небезопасно» для этого хоста — продолжаем, иначе отказ и наша
+        // страница ошибки (on_load_error) с данными сертификата.
+        fn on_certificate_error(
+            &self,
+            browser: Option<&mut Browser>,
+            _cert_error: Errorcode,
+            request_url: Option<&CefString>,
+            ssl_info: Option<&mut Sslinfo>,
+            callback: Option<&mut Callback>,
+        ) -> ::std::os::raw::c_int {
+            let role = self.shell.role_of(self.role, browser.as_deref());
+            let Role::Tab(id) = role else { return 0 };
+            let url = request_url.map(|u| u.to_string()).unwrap_or_default();
+            let cert = ssl_info
+                .and_then(|info| info.x509_certificate())
+                .map(|cert| ui::CertInfo {
+                    issuer: cert
+                        .issuer()
+                        .map(|p| CefString::from(&p.display_name()).to_string())
+                        .unwrap_or_default(),
+                    valid_from: crate::scheme::basetime_to_unix(cert.valid_start().val),
+                    valid_to: crate::scheme::basetime_to_unix(cert.valid_expiry().val),
+                })
+                .unwrap_or_default();
+            if self.shell.certificate_error(id, &url, cert) {
+                if let Some(callback) = callback {
+                    callback.cont();
+                    return 1;
+                }
             }
             0
         }
@@ -433,10 +495,18 @@ wrap_request_handler! {
                     }
                 }
                 Role::Tab(id) => {
+                    if let Some(router) = self.shell.router() {
+                        router.on_render_process_terminated(browser.as_deref().cloned());
+                    }
                     let Some(b) = browser else { return };
                     let reason = error_string.map(|s| s.to_string()).unwrap_or_default();
-                    let details = format!("{reason} (статус {}, код {error_code})", status.get_raw());
-                    self.shell.show_crash(id, b, &details);
+                    let code_name = termination_name(status);
+                    let details = if reason.is_empty() {
+                        format!("exit code {error_code}")
+                    } else {
+                        format!("{reason} (exit code {error_code})")
+                    };
+                    self.shell.show_crash(id, b, code_name, &details);
                 }
                 // Упавшие DevTools пользователь переоткроет сам.
                 Role::DevTools(_) => {}

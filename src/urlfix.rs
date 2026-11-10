@@ -108,7 +108,7 @@ fn looks_like_domain(host: &str) -> bool {
 }
 
 /// application/x-www-form-urlencoded: пробел -> `+`, остальное — %XX.
-fn encode_query(q: &str) -> String {
+pub(crate) fn encode_query(q: &str) -> String {
     let mut out = String::with_capacity(q.len() * 3);
     for b in q.bytes() {
         match b {

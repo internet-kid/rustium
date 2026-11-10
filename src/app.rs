@@ -36,6 +36,13 @@ wrap_app! {
             }
         }
 
+        // Схема rustium:// должна быть зарегистрирована во всех процессах.
+        fn on_register_custom_schemes(&self, registrar: Option<&mut SchemeRegistrar>) {
+            if let Some(registrar) = registrar {
+                crate::scheme::register_custom_scheme(registrar);
+            }
+        }
+
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
             Some(RustiumBrowserProcessHandler::new(self.shell.clone()))
         }
@@ -60,6 +67,7 @@ wrap_browser_process_handler! {
 
     impl BrowserProcessHandler {
         fn on_context_initialized(&self) {
+            crate::scheme::register_handler_factory();
             self.shell.start();
         }
     }
@@ -114,7 +122,13 @@ wrap_render_process_handler! {
         ) {
             let Some(browser) = browser else { return };
             let is_main = frame.as_deref().is_some_and(|f| f.is_main() != 0);
-            if is_main && is_ui_browser(browser) {
+            // cefQuery получают интерфейс браузера и служебные страницы
+            // rustium:// (их нельзя открыть со страниц сайтов). Что им
+            // можно делать, всё равно проверяет браузерный процесс.
+            let service_page = frame
+                .as_deref()
+                .is_some_and(|f| CefString::from(&f.url()).to_string().starts_with("rustium://"));
+            if is_main && (is_ui_browser(browser) || service_page) {
                 self.router.on_context_created(Some(browser.clone()), frame.cloned(), context.cloned());
             }
         }
@@ -126,7 +140,8 @@ wrap_render_process_handler! {
             context: Option<&mut V8Context>,
         ) {
             let Some(browser) = browser else { return };
-            if is_ui_browser(browser) {
+            // Освобождаем всегда: router сам знает, где он внедрён.
+            {
                 self.router.on_context_released(Some(browser.clone()), frame.cloned(), context.cloned());
             }
         }

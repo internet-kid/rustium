@@ -13,6 +13,7 @@ pub mod client;
 pub mod devtools_bridge;
 pub mod downloads;
 pub mod ipc;
+pub mod scheme;
 pub mod shell;
 pub mod shortcuts;
 pub mod task;

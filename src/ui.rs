@@ -1,8 +1,8 @@
-//! Встроенные HTML-страницы: панель браузера и страница новой вкладки.
+//! Встроенные страницы интерфейса.
 //!
-//! Обе страницы вшиваются в бинарник (`include_str!`) и открываются как
-//! `data:`-URL, поэтому никакого локального сервера или файлов рядом
-//! с программой не нужно.
+//! Панель и всплывающие окна вшиваются в бинарник и открываются как
+//! `data:`-URL. Новая вкладка и страницы ошибок живут на схеме
+//! `rustium://` (scheme.rs).
 
 use std::sync::OnceLock;
 
@@ -14,7 +14,6 @@ pub const TOOLBAR_HEIGHT: i32 = 80;
 pub const NEW_TAB_TITLE: &str = "New Tab";
 
 const TOOLBAR_HTML: &str = include_str!("../ui/toolbar.html");
-const NEWTAB_HTML: &str = include_str!("../ui/newtab.html");
 const POPUP_HTML: &str = include_str!("../ui/popup.html");
 const SPLITTER_HTML: &str = include_str!("../ui/splitter.html");
 
@@ -42,8 +41,7 @@ pub fn popup_url() -> &'static str {
 }
 
 pub fn newtab_url() -> &'static str {
-    static URL: OnceLock<String> = OnceLock::new();
-    URL.get_or_init(|| data_url(&with_fonts(NEWTAB_HTML)))
+    crate::scheme::NEWTAB_URL
 }
 
 fn with_fonts(html: &str) -> String {
@@ -59,7 +57,7 @@ fn with_fonts(html: &str) -> String {
 }
 
 pub fn is_newtab(url: &str) -> bool {
-    url == newtab_url()
+    url.trim_end_matches('/') == newtab_url().trim_end_matches('/')
 }
 
 /// URL так, как его видит пользователь: для служебной новой вкладки — пусто.
@@ -71,41 +69,84 @@ pub fn display_url(url: &str) -> &str {
     }
 }
 
-/// Страница ошибки загрузки (сеть, сертификат, упавший renderer).
-/// Все строки экранируются: `failed_url` и текст ошибки приходят извне.
-pub fn error_page_url(heading: &str, details: &str, failed_url: &str) -> String {
-    let html = format!(
-        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{title}</title>
-<style>
-  :root {{ color-scheme: dark; font-family: Geist, system-ui, sans-serif; }}
-  body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; background: #16181e; color: #eceef3; }}
-  main {{ max-width: 560px; padding: 32px; text-align: center; }}
-  h1 {{ font-size: 24px; font-weight: 600; margin: 0 0 12px; }}
-  p {{ color: #c9cdd6; line-height: 1.5; margin: 0 0 16px; word-break: break-all; }}
-  code {{ font: 12px "Geist Mono", ui-monospace, monospace; color: #9aa0ad; background: #1d2027; padding: 3px 8px; border-radius: 6px; }}
-</style></head>
-<body><main><h1>{heading}</h1><p>{url}</p><code>{details}</code></main></body></html>"#,
-        title = escape_html(heading),
-        heading = escape_html(heading),
-        url = escape_html(failed_url),
-        details = escape_html(details),
-    );
-    data_url(&html)
+/// Вид страницы ошибки (ui/error.html, макеты docs/design/Err*.dc.html).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ErrorKind {
+    Offline,
+    Dns,
+    /// Отказ, таймаут и прочие сбои соединения.
+    Refused,
+    Cert,
+    Crash,
+    File,
 }
 
-fn escape_html(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    for c in s.chars() {
-        match c {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&#39;"),
-            _ => out.push(c),
+impl ErrorKind {
+    /// По коду ошибки Chromium (net_error_list.h).
+    pub fn for_code(code: i32) -> Self {
+        match code {
+            -106 => ErrorKind::Offline,                // INTERNET_DISCONNECTED
+            -105 | -137 => ErrorKind::Dns,             // NAME_NOT_RESOLVED, NAME_RESOLUTION_FAILED
+            -6 | -8 | -10 => ErrorKind::File,          // FILE_NOT_FOUND, FILE_TOO_BIG, ACCESS_DENIED
+            -299..=-200 => ErrorKind::Cert,
+            _ => ErrorKind::Refused,
         }
     }
-    out
+
+    fn as_str(self) -> &'static str {
+        match self {
+            ErrorKind::Offline => "offline",
+            ErrorKind::Dns => "dns",
+            ErrorKind::Refused => "refused",
+            ErrorKind::Cert => "cert",
+            ErrorKind::Crash => "crash",
+            ErrorKind::File => "file",
+        }
+    }
+}
+
+/// Сведения о сертификате для страницы ошибки сертификата.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CertInfo {
+    pub issuer: String,
+    /// Срок действия, секунды Unix.
+    pub valid_from: i64,
+    pub valid_to: i64,
+}
+
+/// Адрес страницы ошибки. Все значения кодируются: они приходят извне.
+pub fn error_url(
+    kind: ErrorKind,
+    failed_url: &str,
+    code: &str,
+    raw: &str,
+    cert: Option<&CertInfo>,
+) -> String {
+    use crate::urlfix::encode_query as enc;
+    let mut url = format!(
+        "{}?kind={}&url={}&code={}",
+        crate::scheme::ERROR_URL,
+        kind.as_str(),
+        enc(failed_url),
+        enc(code)
+    );
+    if !raw.is_empty() {
+        url.push_str(&format!("&raw={}", enc(raw)));
+    }
+    if let Some(cert) = cert {
+        url.push_str(&format!(
+            "&issuer={}&from={}&to={}",
+            enc(&cert.issuer),
+            cert.valid_from,
+            cert.valid_to
+        ));
+    }
+    url
+}
+
+/// Это наша страница ошибки.
+pub fn is_error_page(url: &str) -> bool {
+    url.starts_with(crate::scheme::ERROR_URL)
 }
 
 fn data_url(html: &str) -> String {
@@ -151,17 +192,25 @@ mod tests {
     }
 
     #[test]
-    fn error_page_escapes_input() {
-        assert_eq!(
-            escape_html(r#"<script>"a"&'b'"#),
-            "&lt;script&gt;&quot;a&quot;&amp;&#39;b&#39;"
-        );
-        assert!(error_page_url("x", "y", "z").starts_with("data:text/html"));
+    fn error_kinds_and_urls() {
+        assert_eq!(ErrorKind::for_code(-106), ErrorKind::Offline);
+        assert_eq!(ErrorKind::for_code(-105), ErrorKind::Dns);
+        assert_eq!(ErrorKind::for_code(-201), ErrorKind::Cert);
+        assert_eq!(ErrorKind::for_code(-6), ErrorKind::File);
+        assert_eq!(ErrorKind::for_code(-102), ErrorKind::Refused);
+        let url = error_url(ErrorKind::Dns, "https://a.b/?x=1&y=<2>", "ERR_NAME_NOT_RESOLVED", "", None);
+        assert!(is_error_page(&url));
+        assert!(url.contains("kind=dns"));
+        assert!(url.contains("url=https%3A%2F%2Fa.b%2F%3Fx%3D1%26y%3D%3C2%3E"));
+        let cert = CertInfo { issuer: "CA 1".into(), valid_from: 1, valid_to: 2 };
+        let url = error_url(ErrorKind::Cert, "https://x", "ERR_CERT_DATE_INVALID", "", Some(&cert));
+        assert!(url.ends_with("&issuer=CA+1&from=1&to=2"));
     }
 
     #[test]
     fn newtab_is_hidden_from_address_bar() {
         assert_eq!(display_url(newtab_url()), "");
+        assert_eq!(display_url("rustium://newtab"), "");
         assert_eq!(display_url("https://a.b"), "https://a.b");
         assert!(toolbar_url().starts_with("data:text/html"));
     }

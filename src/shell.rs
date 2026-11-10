@@ -102,10 +102,12 @@ pub(crate) struct Tab {
     pub progress: f64,
     pub can_go_back: bool,
     pub can_go_forward: bool,
-    /// Если показана наша страница ошибки: (её data-URL, исходный URL).
+    /// Если показана наша страница ошибки: (её адрес, исходный URL).
     pub error_page: Option<(String, String)>,
     /// Страница ошибки показана из-за плохого сертификата.
     pub cert_error: bool,
+    /// Сертификат из последнего on_certificate_error — для страницы ошибки.
+    pub pending_cert: Option<ui::CertInfo>,
     /// Масштаб страницы, %.
     pub zoom: u32,
 }
@@ -114,7 +116,7 @@ impl Tab {
     /// URL для адресной строки.
     fn shown_url(&self) -> &str {
         match &self.error_page {
-            Some((page, failed)) if *page == self.url => failed,
+            Some((_, failed)) if ui::is_error_page(&self.url) => failed,
             _ => ui::display_url(&self.url),
         }
     }
@@ -124,7 +126,7 @@ impl Tab {
         if ui::is_newtab(&self.url) {
             return Security::None;
         }
-        let on_error_page = matches!(&self.error_page, Some((page, _)) if *page == self.url);
+        let on_error_page = self.error_page.is_some() && ui::is_error_page(&self.url);
         if on_error_page {
             return if self.cert_error { Security::CertError } else { Security::None };
         }
@@ -208,6 +210,8 @@ struct State {
     devtools_browsers: HashMap<TabId, Browser>,
     /// Observer сообщений CDP вкладки для моста DevTools.
     devtools_registrations: HashMap<TabId, Registration>,
+    /// Хосты, для которых выбрано «Перейти небезопасно» (до выхода).
+    cert_exceptions: HashSet<String>,
 }
 
 impl State {
@@ -249,7 +253,13 @@ impl State {
                 progress: t.progress,
                 can_go_back: t.can_go_back,
                 can_go_forward: t.can_go_forward,
-                security: t.security(),
+                security: if self.cert_exceptions.contains(&host_of(&t.url))
+                    && t.url.starts_with("https://")
+                {
+                    Security::CertError
+                } else {
+                    t.security()
+                },
             })
             .collect();
         let (downloads_badge, downloads_progress) =
@@ -687,7 +697,7 @@ impl Shell {
         let retry = {
             let s = self.lock();
             s.active_tab().and_then(|t| match &t.error_page {
-                Some((page, failed)) if *page == t.url => Some(failed.clone()),
+                Some((_, failed)) if ui::is_error_page(&t.url) => Some(failed.clone()),
                 _ => None,
             })
         };
@@ -747,6 +757,7 @@ impl Shell {
                     can_go_forward: false,
                     error_page: None,
                     cert_error: false,
+                    pending_cert: None,
                     zoom: 100,
                 },
             );
@@ -1097,7 +1108,8 @@ impl Shell {
 
     pub(crate) fn browser_closed(&self, role: Role, browser: Option<Browser>) {
 
-        if role.is_ui() {
+        // Router есть у интерфейса и у вкладок (служебные страницы rustium://).
+        if role.is_ui() || matches!(role, Role::Tab(_)) {
             if let Some(router) = self.router() {
                 router.on_before_close(browser);
             }
@@ -1182,52 +1194,158 @@ impl Shell {
     }
 
     /// Ошибка загрузки главного фрейма: показываем свою страницу.
+    /// `code` — код ошибки Chromium, `code_name` — его имя (ERR_…).
     pub(crate) fn show_load_error(
         &self,
         id: TabId,
         frame: &Frame,
-        error: &str,
+        code: i32,
+        code_name: &str,
         failed_url: &str,
-        cert_error: bool,
     ) {
-        let heading = if cert_error {
-            "Your connection isn't private"
-        } else {
-            "This page couldn't be opened"
-        };
-        let page = ui::error_page_url(heading, error, failed_url);
-        {
+        let kind = ui::ErrorKind::for_code(code);
+        let page = {
             let mut s = self.lock();
-            match s.tabs.iter_mut().find(|t| t.id == id) {
-                Some(tab) => {
-                    tab.error_page = Some((page.clone(), failed_url.to_string()));
-                    tab.cert_error = cert_error;
-                }
-                None => return,
-            }
-        }
+            let Some(tab) = s.tabs.iter_mut().find(|t| t.id == id) else {
+                return;
+            };
+            let cert = tab.pending_cert.take();
+            let cert = (kind == ui::ErrorKind::Cert).then_some(cert).flatten();
+            let page = ui::error_url(kind, failed_url, code_name, "", cert.as_ref());
+            tab.error_page = Some((page.clone(), failed_url.to_string()));
+            tab.cert_error = kind == ui::ErrorKind::Cert;
+            page
+        };
         frame.load_url(Some(&cef_str(&page)));
     }
 
     /// Renderer вкладки упал.
-    pub(crate) fn show_crash(&self, id: TabId, browser: &Browser, details: &str) {
+    pub(crate) fn show_crash(&self, id: TabId, browser: &Browser, code_name: &str, details: &str) {
         let failed_url = self
             .lock()
             .tab(id)
             .map(|t| t.shown_url().to_string())
             .unwrap_or_default();
-        if let Some(frame) = browser.main_frame() {
-            let page = ui::error_page_url("This tab crashed", details, &failed_url);
-            {
-                let mut s = self.lock();
-                if let Some(tab) = s.tabs.iter_mut().find(|t| t.id == id) {
-                    tab.error_page = Some((page.clone(), failed_url.clone()));
-                    tab.cert_error = false;
+        let Some(frame) = browser.main_frame() else { return };
+        let page = ui::error_url(ui::ErrorKind::Crash, &failed_url, code_name, details, None);
+        {
+            let mut s = self.lock();
+            if let Some(tab) = s.tabs.iter_mut().find(|t| t.id == id) {
+                tab.error_page = Some((page.clone(), failed_url.clone()));
+                tab.cert_error = false;
+            }
+        }
+        frame.load_url(Some(&cef_str(&page)));
+    }
+
+    // ---------------------------------------------------------------------
+    // Сертификаты и команды служебных страниц
+    // ---------------------------------------------------------------------
+
+    /// `on_certificate_error`: пропустить, если пользователь уже выбрал
+    /// «Перейти небезопасно» для этого хоста; иначе запомнить сертификат
+    /// для страницы ошибки и отказать.
+    pub(crate) fn certificate_error(&self, id: TabId, url: &str, cert: ui::CertInfo) -> bool {
+        let host = host_of(url);
+        let mut s = self.lock();
+        if s.cert_exceptions.contains(&host) {
+            return true;
+        }
+        if let Some(tab) = s.tabs.iter_mut().find(|t| t.id == id) {
+            tab.pending_cert = Some(cert);
+        }
+        false
+    }
+
+    /// Вкладка, которой принадлежит браузер.
+    pub(crate) fn tab_of(&self, browser: &Browser) -> Option<TabId> {
+        let id = browser.identifier();
+        self.lock()
+            .tabs
+            .iter()
+            .find(|t| t.browser.as_ref().is_some_and(|b| b.identifier() == id))
+            .map(|t| t.id)
+    }
+
+    /// Команда со страницы ошибки вкладки `id`.
+    pub(crate) fn page_command(&self, id: TabId, command: crate::ipc::PageCommand) {
+        use crate::ipc::PageCommand;
+        // Команды относятся к странице ошибки этой вкладки и её исходному URL.
+        let (failed, cert_error, browser) = {
+            let s = self.lock();
+            let Some(tab) = s.tab(id) else { return };
+            let failed = tab
+                .error_page
+                .as_ref()
+                .filter(|_| ui::is_error_page(&tab.url))
+                .map(|(_, failed)| failed.clone());
+            (failed, tab.cert_error, tab.browser.clone())
+        };
+        let Some(failed) = failed else { return };
+        let load = |url: &str| {
+            if let Some(frame) = browser.as_ref().and_then(|b| b.main_frame()) {
+                frame.load_url(Some(&cef_str(url)));
+            }
+        };
+        match command {
+            PageCommand::Retry => load(&failed),
+            PageCommand::ProceedUnsafe => {
+                if cert_error {
+                    self.lock().cert_exceptions.insert(host_of(&failed));
+                    load(&failed);
                 }
             }
-            frame.load_url(Some(&cef_str(&page)));
+            PageCommand::RevealFile => {
+                if let Some(path) = file_path(&failed) {
+                    // Файла нет — открываем ближайшую существующую папку.
+                    let dir = path.ancestors().skip(1).find(|p| p.is_dir());
+                    if let Some(dir) = dir {
+                        downloads::open_file(dir);
+                    }
+                }
+            }
+            PageCommand::NetworkSettings => {
+                if cfg!(target_os = "macos") {
+                    let _ = std::process::Command::new("open")
+                        .arg("x-apple.systempreferences:com.apple.Network-Settings.extension")
+                        .spawn();
+                }
+            }
         }
     }
+}
+
+/// Хост (с портом) из URL, в нижнем регистре.
+pub(crate) fn host_of(url: &str) -> String {
+    url.split_once("://")
+        .map(|(_, rest)| rest.split(['/', '?', '#']).next().unwrap_or(""))
+        .unwrap_or("")
+        .rsplit('@')
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase()
+}
+
+/// Путь файла из `file://` URL (с раскодированием %XX).
+fn file_path(url: &str) -> Option<std::path::PathBuf> {
+    let rest = url.strip_prefix("file://")?;
+    let path = rest.split(['?', '#']).next().unwrap_or("");
+    let bytes = path.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).ok();
+            if let Some(b) = hex.and_then(|h| u8::from_str_radix(h, 16).ok()) {
+                out.push(b);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    Some(std::path::PathBuf::from(String::from_utf8_lossy(&out).into_owned()))
 }
 
 /// Масштаб в процентах по уровню Chromium (каждый шаг — ×1.2).
@@ -1237,7 +1355,18 @@ pub(crate) fn zoom_percent(level: f64) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::zoom_percent;
+    use super::{file_path, host_of, zoom_percent};
+
+    #[test]
+    fn hosts_and_file_paths() {
+        assert_eq!(host_of("https://User@Expired.Badssl.com:8443/x?y"), "expired.badssl.com:8443");
+        assert_eq!(host_of("http://localhost:3000"), "localhost:3000");
+        assert_eq!(
+            file_path("file:///Users/a/My%20Docs/index.html").unwrap(),
+            std::path::PathBuf::from("/Users/a/My Docs/index.html")
+        );
+        assert!(file_path("https://x").is_none());
+    }
 
     #[test]
     fn zoom_levels() {
