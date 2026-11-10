@@ -7,6 +7,7 @@
 //! скопировать нужное, отпустить и только потом звать CEF.
 
 mod devtools;
+mod permissions;
 mod popup;
 mod transfers;
 
@@ -16,7 +17,7 @@ use crate::ipc::{
     Anchor, Dock, DownloadAction, PopupKind, Security, TabState, ToolbarQueryHandler, UiState,
 };
 use crate::task::{post_ui, post_ui_delayed};
-use crate::{ui, urlfix, views};
+use crate::{prefs, ui, urlfix, views};
 use cef::wrapper::message_router::{
     BrowserSideRouter, MessageRouterBrowserSide, MessageRouterBrowserSideHandlerCallbacks,
     MessageRouterConfig,
@@ -28,6 +29,8 @@ use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 use std::time::Instant;
 
 pub type TabId = u32;
+
+pub use permissions::PromptView;
 
 /// Ключ в `extra_info` браузера панели. По нему renderer понимает,
 /// куда можно внедрить `window.cefQuery`.
@@ -85,6 +88,14 @@ pub enum Action {
         action: DownloadAction,
     },
     SetDevtoolsDock(Dock),
+    /// Открыть настройки (или перейти на уже открытую вкладку настроек).
+    OpenSettings,
+    /// Ответ в окне запроса разрешения.
+    PermissionDecision {
+        id: u64,
+        allow: bool,
+        remember: bool,
+    },
     SplitterMove {
         dx: f64,
         dy: f64,
@@ -110,6 +121,9 @@ pub(crate) struct Tab {
     pub pending_cert: Option<ui::CertInfo>,
     /// Масштаб страницы, %.
     pub zoom: u32,
+    /// Страница сейчас пользуется камерой / микрофоном.
+    pub camera_on: bool,
+    pub mic_on: bool,
 }
 
 impl Tab {
@@ -212,6 +226,16 @@ struct State {
     devtools_registrations: HashMap<TabId, Registration>,
     /// Хосты, для которых выбрано «Перейти небезопасно» (до выхода).
     cert_exceptions: HashSet<String>,
+
+    /// Неотвеченные запросы разрешений (shell/permissions.rs).
+    prompts: Vec<permissions::Pending>,
+    next_prompt: u64,
+    /// Ссылки из других приложений, пришедшие до создания окна.
+    pending_urls: Vec<String>,
+    /// Настройки профиля применены (при создании первого браузера).
+    prefs_applied: bool,
+    /// Последняя сохранённая сессия (чтобы не писать файл без изменений).
+    last_session: Option<prefs::Session>,
 }
 
 impl State {
@@ -253,6 +277,9 @@ impl State {
                 progress: t.progress,
                 can_go_back: t.can_go_back,
                 can_go_forward: t.can_go_forward,
+                camera: t.camera_on,
+                microphone: t.mic_on,
+                permission_pending: self.prompts.iter().any(|p| p.tab == t.id),
                 security: if self.cert_exceptions.contains(&host_of(&t.url))
                     && t.url.starts_with("https://")
                 {
@@ -276,6 +303,11 @@ impl State {
             popup: self.popup,
             devtools_dock: self.dock,
             devtools_open: self.active.is_some_and(|id| self.devtools_open(id)),
+            permission: self
+                .prompts
+                .iter()
+                .find(|p| Some(p.tab) == self.active)
+                .map(|p| p.view()),
         })
         .unwrap_or_else(|_| "{}".into())
     }
@@ -293,6 +325,27 @@ static GLOBAL: OnceLock<Weak<Shell>> = OnceLock::new();
 pub fn request_quit() {
     if let Some(shell) = GLOBAL.get().and_then(Weak::upgrade) {
         post_ui(move || shell.perform(Action::Quit));
+    }
+}
+
+/// Открыть ссылку из другого приложения (Rustium — браузер по умолчанию).
+pub fn open_external(url: String) {
+    let Some(shell) = GLOBAL.get().and_then(Weak::upgrade) else { return };
+    let ready = {
+        let mut s = shell.lock();
+        if s.window.is_none() {
+            s.pending_urls.push(url.clone());
+        }
+        s.window.is_some()
+    };
+    if ready {
+        post_ui(move || {
+            shell.perform(Action::OpenUrl { url, opener: None, foreground: true });
+            let window = shell.lock().window.clone();
+            if let Some(window) = window {
+                window.activate();
+            }
+        });
     }
 }
 
@@ -432,7 +485,7 @@ impl Shell {
         if let Some(content) = &content {
             self.create_splitter(content);
         }
-        self.open_tab(None, None, true);
+        self.open_startup_tabs();
         window.show();
         window.activate();
     }
@@ -632,6 +685,10 @@ impl Shell {
             }
             Action::PopupSize { width, height } => self.popup_size(width, height),
             Action::Download { id, action } => self.download_action(id, action),
+            Action::OpenSettings => self.open_settings(),
+            Action::PermissionDecision { id, allow, remember } => {
+                self.permission_decision(id, allow, remember)
+            }
             Action::Quit => {
                 let window = self.lock().window.clone();
                 if let Some(window) = window {
@@ -677,7 +734,8 @@ impl Shell {
     }
 
     fn navigate(&self, text: &str) {
-        let Some(url) = urlfix::fixup(text) else {
+        let engine = prefs::get().search_engine;
+        let Some(url) = urlfix::fixup_with(text, engine.search_prefix()) else {
             return;
         };
         self.load_in_active(&url);
@@ -759,6 +817,8 @@ impl Shell {
                     cert_error: false,
                     pending_cert: None,
                     zoom: 100,
+                    camera_on: false,
+                    mic_on: false,
                 },
             );
             s.content.clone()
@@ -777,6 +837,87 @@ impl Shell {
             self.push_state();
         }
         Some(id)
+    }
+
+    /// Вкладки при запуске: по настройке «On startup» и ссылки из других
+    /// приложений, пришедшие до создания окна.
+    fn open_startup_tabs(&self) {
+        let p = prefs::get();
+        let pending = std::mem::take(&mut self.lock().pending_urls);
+        let (urls, active): (Vec<Option<String>>, usize) = match p.startup.mode {
+            prefs::StartupMode::Restore => {
+                let session = prefs::load_session();
+                let urls: Vec<Option<String>> = session
+                    .tabs
+                    .into_iter()
+                    .map(|u| (!u.is_empty()).then_some(u))
+                    .collect();
+                (urls, session.active)
+            }
+            prefs::StartupMode::Pages => (p.startup.pages.into_iter().map(Some).collect(), 0),
+            prefs::StartupMode::NewTab => (Vec::new(), 0),
+        };
+        let mut ids = Vec::new();
+        for url in urls {
+            ids.extend(self.open_tab(url, None, false));
+        }
+        let mut external = None;
+        for url in pending {
+            external = self.open_tab(Some(url), None, false).or(external);
+        }
+        // Ссылка извне важнее восстановленной активной вкладки.
+        match external.or_else(|| ids.get(active.min(ids.len().saturating_sub(1))).copied()) {
+            Some(id) => self.activate(id),
+            None => {
+                self.open_tab(None, None, true);
+            }
+        }
+    }
+
+    /// Открыть настройки: уже открытую вкладку или новую.
+    fn open_settings(&self) {
+        let existing = self
+            .lock()
+            .tabs
+            .iter()
+            .find(|t| t.url.starts_with(crate::scheme::SETTINGS_URL.trim_end_matches('/')))
+            .map(|t| t.id);
+        match existing {
+            Some(id) => self.activate(id),
+            None => {
+                self.open_tab(Some(crate::scheme::SETTINGS_URL.to_string()), None, true);
+            }
+        }
+    }
+
+    /// Сохранить открытые вкладки для «Continue where you left off».
+    /// Вызывается из push_state (после любых изменений вкладок).
+    fn save_session(&self) {
+        let session = {
+            let mut s = self.lock();
+            if s.window_closing || s.window_destroyed || s.tabs.is_empty() {
+                return;
+            }
+            let tabs: Vec<String> = s
+                .tabs
+                .iter()
+                .map(|t| {
+                    if ui::is_newtab(&t.url) {
+                        String::new()
+                    } else {
+                        t.shown_url().to_string()
+                    }
+                })
+                .collect();
+            let active = s.tabs.iter().position(|t| Some(t.id) == s.active).unwrap_or(0);
+            let session = prefs::Session { tabs, active };
+            if s.last_session.as_ref() == Some(&session) {
+                return;
+            }
+            s.last_session = Some(session.clone());
+            session
+        };
+        prefs::save_session(&session);
     }
 
     fn activate(&self, id: TabId) {
@@ -809,9 +950,14 @@ impl Shell {
         self.push_state();
         // Масштаб в Chromium хранится по сайту: у другой вкладки он свой.
         self.refresh_zoom();
+        // У вкладки ждёт ответа запрос разрешения — показать снова.
+        if self.has_prompt(id) {
+            self.open_permission_popup();
+        }
     }
 
     fn close_tab(&self, id: TabId) {
+        self.drop_prompts(id, None);
         enum Plan {
             CloseWindow(Option<Window>),
             CloseTab {
@@ -974,6 +1120,7 @@ impl Shell {
         if let Some(json) = splitter_json {
             self.run_in_splitter(&format!("window.rustium && window.rustium.update({json});"));
         }
+        self.save_session();
     }
 
     pub(crate) fn run_in_toolbar(&self, code: &str) {
@@ -1103,7 +1250,16 @@ impl Shell {
     }
 
     pub(crate) fn browser_created(&self) {
-        self.lock().live_browsers += 1;
+        let first = {
+            let mut s = self.lock();
+            s.live_browsers += 1;
+            !std::mem::replace(&mut s.prefs_applied, true)
+        };
+        // Контекст профиля готов только к созданию первого браузера:
+        // в on_context_initialized set_preference ещё не работает.
+        if first {
+            crate::settings::apply_all();
+        }
     }
 
     pub(crate) fn browser_closed(&self, role: Role, browser: Option<Browser>) {

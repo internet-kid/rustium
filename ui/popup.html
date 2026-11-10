@@ -58,11 +58,51 @@
     outline: none;
   }
   #card.menu { width: 300px; }
+
+  /* Permission request (Permission.dc.html). */
+  #card.permission { width: 340px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .perm-head { display: flex; align-items: center; gap: 10px; }
+  .perm-head .site {
+    width: 24px; height: 24px; flex: none;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .perm-head h2 { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .perm-items { display: flex; flex-direction: column; gap: 2px; }
+  .perm-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--raised-row);
+    font-size: 13.5px;
+  }
+  .perm-item .badge {
+    width: 30px; height: 30px; flex: none;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    background: rgba(139, 124, 255, .18);
+    color: var(--accent);
+  }
+  .perm-item .note { display: block; margin-top: 2px; font-size: 12px; color: var(--dim); }
+  .perm-remember { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--secondary); }
+  .perm-remember input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+  .perm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .perm-actions button {
+    height: 32px; padding: 0 16px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+  }
+  .perm-actions .block { border: 1px solid rgba(255, 255, 255, .12); background: transparent; color: var(--text); }
+  .perm-actions .block:hover { background: rgba(255, 255, 255, .06); }
+  .perm-actions .allow { padding: 0 18px; border: 0; background: var(--accent); color: #0e0f13; font-weight: 600; }
+  .perm-actions .allow:hover { background: #9d90ff; }
   #card.downloads { width: 400px; }
   /* macOS rounds the popup window itself (mac::style_popup_window), the
      card border follows. Must match the radii in src/shell/popup.rs. */
   .rounded #card.menu { border-radius: 14px; }
-  .rounded #card.downloads { border-radius: 16px; }
+  .rounded #card.downloads,
+  .rounded #card.permission { border-radius: 16px; }
 
   /* ---------- Menu ---------- */
   .item {
@@ -338,7 +378,7 @@ function renderMenu() {
     menuItem({ label: 'Print…', iconName: 'print', shortcut: k('⌘P', 'Ctrl+P'), cmd: 'print' }),
     devtoolsRow(),
     el('div', { class: 'sep', role: 'separator' }),
-    menuItem({ label: 'Settings', iconName: 'settings', soon: true }),
+    menuItem({ label: 'Settings', iconName: 'settings', shortcut: k('⌘,', ''), cmd: 'openSettings' }),
     menuItem({ label: 'About Rustium', iconName: 'about', soon: true }),
     menuItem({ label: isMac ? 'Quit Rustium' : 'Exit', iconName: 'quit', shortcut: k('⌘Q', ''), cmd: 'quit' }),
   );
@@ -476,6 +516,62 @@ function renderDownloads() {
 }
 
 // ---------------------------------------------------------------------------
+// Permission request (Permission.dc.html)
+// ---------------------------------------------------------------------------
+
+const PERM_TEXT = {
+  camera: ['Use your camera'],
+  microphone: ['Use your microphone'],
+  screen: ['Share your screen', 'Your entire screen will be shared'],
+  location: ['Know your location'],
+  notifications: ['Show notifications'],
+  clipboard: ['See text and images copied to the clipboard'],
+  other: ['Use other features of your device'],
+};
+const PERM_ICON = {
+  camera: [['rect', { x: 3, y: 6, width: 12, height: 12, rx: 2 }], ['path', { d: 'M15 10l6-3v10l-6-3' }]],
+  microphone: [['rect', { x: 9, y: 3, width: 6, height: 11, rx: 3 }], ['path', { d: 'M5 11a7 7 0 0 0 14 0M12 18v3' }]],
+  screen: [['rect', { x: 3, y: 4, width: 18, height: 12, rx: 2 }], ['path', { d: 'M8 20h8M12 16v4' }]],
+  location: [['path', { d: 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z' }], ['circle', { cx: 12, cy: 9, r: 2.5 }]],
+  notifications: [['path', { d: 'M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z' }], ['path', { d: 'M10 20.5a2 2 0 0 0 4 0' }]],
+  clipboard: [['rect', { x: 6, y: 4.5, width: 12, height: 16, rx: 2 }], ['path', { d: 'M9.5 4.5V3h5v1.5M9.5 10h5M9.5 14h5' }]],
+  other: [['circle', { cx: 12, cy: 12, r: 9 }], ['path', { d: 'M12 8v5M12 16v.01' }]],
+};
+const SITE_COLORS = ['#16a34a', '#2563eb', '#ea580c', '#7c3aed', '#db2777', '#0891b2'];
+
+function siteColor(host) {
+  let h = 0;
+  for (const ch of host) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return SITE_COLORS[h % SITE_COLORS.length];
+}
+
+function renderPermission() {
+  const p = state.permission;
+  if (!p) return;
+  const host = p.host || 'This site';
+  const letter = (host.replace(/^www\./, '')[0] || '?').toUpperCase();
+  const remember = el('input', { type: 'checkbox', checked: true });
+  const decide = (allow) => send('permissionDecision', { id: p.id, allow, remember: p.canRemember && remember.checked });
+  card.append(
+    el('div', { class: 'perm-head' },
+      el('span', { class: 'site', 'aria-hidden': 'true', style: `background:${siteColor(host)}` }, letter),
+      el('h2', { id: 'perm-title' }, `${host} wants to`)),
+    el('div', { class: 'perm-items' }, ...p.items.map((item) => {
+      const [title, note] = PERM_TEXT[item] || PERM_TEXT.other;
+      return el('div', { class: 'perm-item' },
+        el('span', { class: 'badge' }, icon(PERM_ICON[item] || PERM_ICON.other, 16)),
+        el('span', {}, title, note ? el('span', { class: 'note' }, note) : null));
+    })),
+    p.canRemember ? el('label', { class: 'perm-remember' }, remember, 'Remember this decision') : null,
+    el('div', { class: 'perm-actions' },
+      el('button', { class: 'block', on: { click: () => decide(false) } }, 'Block'),
+      el('button', { class: 'allow', on: { click: () => decide(true) } }, 'Allow')),
+  );
+  card.setAttribute('role', 'dialog');
+  card.setAttribute('aria-labelledby', 'perm-title');
+}
+
+// ---------------------------------------------------------------------------
 // Rendering and size
 // ---------------------------------------------------------------------------
 
@@ -494,6 +590,7 @@ function render() {
   card.hidden = false;
   if (kind === 'menu') renderMenu();
   else if (kind === 'downloads') renderDownloads();
+  else if (kind === 'permission') renderPermission();
   const list = document.getElementById('list');
   if (list) list.scrollTop = scroll;
 
@@ -518,7 +615,7 @@ function render() {
 // ---------------------------------------------------------------------------
 
 function focusables() {
-  return [...card.querySelectorAll('button:not(:disabled)')];
+  return [...card.querySelectorAll('button:not(:disabled), input')];
 }
 
 document.addEventListener('keydown', (e) => {

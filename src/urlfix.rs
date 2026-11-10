@@ -20,6 +20,12 @@ const PASSTHROUGH_SCHEMES: &[&str] = &[
 
 /// Нормализует ввод пользователя. `None` — пустой ввод.
 pub fn fixup(input: &str) -> Option<String> {
+    fixup_with(input, SEARCH_URL)
+}
+
+/// То же, но поиск — через `search_prefix` (запрос дописывается в конец).
+pub fn fixup_with(input: &str, search_prefix: &str) -> Option<String> {
+    let search_url = |q: &str| format!("{search_prefix}{}", encode_query(q));
     let s = input.trim();
     if s.is_empty() {
         return None;

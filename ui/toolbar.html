@@ -239,6 +239,26 @@
     font-variant-numeric: tabular-nums;
   }
   #zoom-chip:hover { color: var(--text); }
+  /* Site permissions: a pending request (accent, click reopens it) or the
+     camera/microphone in use (red dot). */
+  #perm-chip {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  #perm-chip[hidden] { display: none; }
+  #perm-chip.pending { background: rgba(139, 124, 255, .16); color: #b4abff; }
+  #perm-chip.pending:hover { background: rgba(139, 124, 255, .24); }
+  #perm-chip.live { background: rgba(255, 138, 128, .12); color: var(--danger); cursor: default; }
+  #perm-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  #perm-chip.pending .dot { display: none; }
 
   .field { position: relative; flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; }
   #address {
@@ -348,6 +368,10 @@
                aria-label="Address" placeholder="Search or enter address">
         <div id="pretty" aria-hidden="true"></div>
       </div>
+      <button id="perm-chip" hidden>
+        <span class="dot" aria-hidden="true"></span>
+        <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg><span class="text"></span>
+      </button>
       <button id="zoom-chip" hidden>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span></span>
       </button>
@@ -454,6 +478,10 @@ window.rustium = {
     addressEl.select();
   },
   /** Open the downloads list under its button (a download started, or the menu item). */
+  /** Show the active tab's permission request under the address bar. */
+  openPermission() {
+    requestAnimationFrame(() => showPopup('permission', omniboxEl));
+  },
   openDownloads() {
     // The button may have just appeared: wait for layout.
     requestAnimationFrame(() => showPopup('downloads', downloadsEl.hidden ? menuEl : downloadsEl));
@@ -604,6 +632,7 @@ function renderBar() {
 
   renderDownloadsButton();
   renderZoomChip();
+  renderPermissionChip(tab);
   menuEl.setAttribute('aria-expanded', String(state.popup === 'menu'));
 
   if (loading) {
@@ -613,6 +642,43 @@ function renderBar() {
     progressEl.style.opacity = '0';
     progressEl.style.width = '100%';
   }
+}
+
+const PERM_LABELS = {
+  camera: 'Camera', microphone: 'Microphone', screen: 'Screen', location: 'Location',
+  notifications: 'Notifications', clipboard: 'Clipboard', other: 'Permission',
+};
+const PERM_ICONS = {
+  camera: '<rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/>',
+  microphone: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  screen: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  location: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  notifications: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  clipboard: '<rect x="6" y="4.5" width="12" height="16" rx="2"/><path d="M9.5 4.5V3h5v1.5M9.5 10h5M9.5 14h5"/>',
+  other: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.01"/>',
+};
+
+function renderPermissionChip(tab) {
+  const chip = $('#perm-chip');
+  const request = tab && tab.permissionPending && state.permission;
+  let kind = null;
+  let label = '';
+  if (request) {
+    kind = request.items[0] || 'other';
+    label = `${request.host} wants to use your ${PERM_LABELS[kind].toLowerCase()}. Click to answer`;
+  } else if (tab && (tab.camera || tab.microphone)) {
+    kind = tab.camera ? 'camera' : 'microphone';
+    label = tab.camera && tab.microphone
+      ? 'This page is using your camera and microphone'
+      : `This page is using your ${kind}`;
+  }
+  chip.hidden = !kind;
+  if (!kind) return;
+  chip.className = request ? 'pending' : 'live';
+  chip.querySelector('.icon').innerHTML = PERM_ICONS[kind];
+  chip.querySelector('.text').textContent = PERM_LABELS[kind];
+  chip.title = label;
+  chip.setAttribute('aria-label', label);
 }
 
 function renderZoomChip() {
@@ -657,6 +723,9 @@ menuEl.addEventListener('click', () => showPopup('menu', menuEl));
 menuEl.title = 'Main menu';
 downloadsEl.addEventListener('click', () => showPopup('downloads', downloadsEl));
 $('#zoom-chip').addEventListener('click', () => send('zoomReset'));
+$('#perm-chip').addEventListener('click', () => {
+  if ($('#perm-chip').classList.contains('pending')) showPopup('permission', omniboxEl);
+});
 backEl.title = isMac ? 'Back (⌘[)' : 'Back (Alt+←)';
 forwardEl.title = isMac ? 'Forward (⌘])' : 'Forward (Alt+→)';
 

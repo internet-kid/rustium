@@ -59,7 +59,39 @@ fn build(output: &std::path::Path, release: bool) -> Result<PathBuf, String> {
         "English",
         semver::Version::new(0, 1, 0),
     );
-    build_bundle(output, "rustium", info).map_err(|e| e.to_string())
+    let app = build_bundle(output, "rustium", info).map_err(|e| e.to_string())?;
+    patch_info_plist(&app.join("Contents/Info.plist"))?;
+    Ok(app)
+}
+
+/// Дописать в Info.plist то, чего нет в cef::build_util: тексты запросов
+/// доступа к камере, микрофону и геопозиции (их показывает macOS) и
+/// схемы http/https, чтобы Rustium мог быть браузером по умолчанию.
+/// Бинарник подписан только линкером, подпись бандла это не ломает.
+#[cfg(target_os = "macos")]
+fn patch_info_plist(plist: &std::path::Path) -> Result<(), String> {
+    let entries: &[(&str, &str, &str)] = &[
+        ("NSCameraUsageDescription", "-string", "Websites you visit can ask to use your camera."),
+        ("NSMicrophoneUsageDescription", "-string", "Websites you visit can ask to use your microphone."),
+        ("NSLocationUsageDescription", "-string", "Websites you visit can ask for your location."),
+        ("NSLocationWhenInUseUsageDescription", "-string", "Websites you visit can ask for your location."),
+        (
+            "CFBundleURLTypes",
+            "-json",
+            r#"[{"CFBundleURLName":"Web site URL","CFBundleURLSchemes":["http","https"]}]"#,
+        ),
+    ];
+    for (key, kind, value) in entries {
+        let status = std::process::Command::new("plutil")
+            .args(["-replace", key, kind, value])
+            .arg(plist)
+            .status()
+            .map_err(|e| format!("plutil: {e}"))?;
+        if !status.success() {
+            return Err(format!("plutil не смог записать {key}"));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]

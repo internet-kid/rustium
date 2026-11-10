@@ -2,6 +2,7 @@
 //!
 //! - `rustium://newtab/` — новая вкладка;
 //! - `rustium://error/?kind=…&url=…` — страницы ошибок (ui/error.html);
+//! - `rustium://settings/<раздел>` — настройки (ui/settings.html);
 //! - `rustium://assets/…` — общие файлы: шрифт, стили.
 //!
 //! Схема регистрируется как STANDARD (обычные URL с хостом и путём),
@@ -16,6 +17,7 @@ use std::sync::{Arc, Mutex};
 pub const SCHEME: &str = "rustium";
 pub const NEWTAB_URL: &str = "rustium://newtab/";
 pub const ERROR_URL: &str = "rustium://error/";
+pub const SETTINGS_URL: &str = "rustium://settings/";
 
 /// Метка в CSS страниц, вместо которой подставляется `@font-face` с Geist.
 const FONT_MARKER: &str = "/*@font-geist*/";
@@ -24,6 +26,7 @@ const FONT_FACE: &str = "@font-face { font-family: Geist; font-weight: 100 900; 
 
 const NEWTAB_HTML: &str = include_str!("../ui/newtab.html");
 const ERROR_HTML: &str = include_str!("../ui/error.html");
+const SETTINGS_HTML: &str = include_str!("../ui/settings.html");
 const GEIST: &[u8] = include_bytes!("../ui/fonts/Geist-Variable.ttf");
 
 /// Ресурс по URL: (содержимое, MIME-тип). `None` — такого нет.
@@ -32,7 +35,21 @@ pub fn resource(url: &str) -> Option<(Vec<u8>, &'static str)> {
     // Хост и путь без query и fragment.
     let path = rest.split(['?', '#']).next().unwrap_or("");
     let path = path.trim_end_matches('/');
-    let html = |s: &str| (s.replacen(FONT_MARKER, FONT_FACE, 1).into_bytes(), "text/html");
+    let engine = crate::prefs::get().search_engine;
+    let prefix = engine.search_prefix();
+    let action = prefix.split('?').next().unwrap_or(prefix);
+    let html = |s: &str| {
+        let page = s
+            .replacen(FONT_MARKER, FONT_FACE, 1)
+            .replace("{{search_action}}", action)
+            .replace("{{search_name}}", engine.label())
+            .replace("{{search_prefix}}", prefix);
+        (page.into_bytes(), "text/html")
+    };
+    // rustium://settings/<раздел> — одна страница, раздел выбирает она сама.
+    if path == "settings" || path.starts_with("settings/") {
+        return Some(html(SETTINGS_HTML));
+    }
     Some(match path {
         "newtab" => html(NEWTAB_HTML),
         "error" => html(ERROR_HTML),
@@ -183,10 +200,14 @@ mod tests {
         assert_eq!(resource("rustium://newtab").unwrap().1, "text/html");
         assert_eq!(resource("rustium://error/?kind=dns&url=x").unwrap().1, "text/html");
         assert_eq!(resource("rustium://assets/fonts/Geist-Variable.ttf").unwrap().1, "font/ttf");
+        assert_eq!(resource("rustium://settings/privacy").unwrap().1, "text/html");
+        assert!(resource("rustium://settingsx/").is_none());
         assert!(resource("rustium://nope/").is_none());
         assert!(resource("https://newtab/").is_none());
         let page = String::from_utf8(resource("rustium://newtab/").unwrap().0).unwrap();
         assert!(page.contains("rustium://assets/fonts/Geist-Variable.ttf"));
+        assert!(page.contains("Search with DuckDuckGo"));
+        assert!(!page.contains("{{"));
     }
 
     #[test]

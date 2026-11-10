@@ -483,7 +483,7 @@ const actions = {
   'Try again': () => send('retry'),
   'Reload': () => send('retry'),
   'Go back': () => history.length > 1 ? history.back() : send('retry'),
-  'Search instead': () => { location.href = 'https://duckduckgo.com/?q=' + encodeURIComponent(host); },
+  'Search instead': () => { location.href = '{{search_prefix}}' + encodeURIComponent(host); },
   'Network settings': () => send('networkSettings'),
   'Back to safety': () => history.length > 1 ? history.back() : (location.href = 'rustium://newtab/'),
   'Open folder…': () => send('revealFile', { url }),

@@ -83,6 +83,45 @@ WebSocket-мост (127.0.0.1, случайный порт, секретный �
   остаётся красным.
 - Сбой renderer показывает `kind=crash` (`Shell::show_crash`).
 
+## Настройки и разрешения
+
+- `src/prefs.rs` — модель настроек без CEF: JSON в профиле
+  (`rustium-settings.json`), проверка (`normalize`), сессия вкладок
+  (`rustium-session.json`). Читается в `run_main` до `initialize`: часть
+  настроек — ключи Chromium (`settings::apply_switches`: `disable-gpu`,
+  `autoplay-policy`), они применяются только после перезапуска.
+- `src/settings.rs` — применение к CEF: preferences контекста запросов
+  (`profile.cookie_controls_mode`, `enable_do_not_track`,
+  `https_only_mode_enabled`, `intl.accept_languages`), глобальные
+  (`dns_over_https.*`), content settings (JavaScript, cookies). Ошибки
+  печатаются с префиксом `[settings]`. Звук сайта — `set_audio_muted` при
+  смене адреса, всплывающие окна без жеста — блокирует `on_before_popup`,
+  папка и диалог загрузок — `on_before_download`.
+- Страница `ui/settings.html` (`rustium://settings/<раздел>`) говорит с Rust
+  командами `SettingsCommand` (getSettings, setSettings с целым объектом
+  настроек, chooseDownloadDir, makeDefaultBrowser, openProxySettings).
+  Они принимаются только из главного фрейма `rustium://settings`.
+- Запросы разрешений: `PermissionHandler` (client.rs) →
+  `shell/permissions.rs`. Решение — исключение сайта, иначе значение по
+  умолчанию; «Ask» ставит запрос в очередь вкладки и показывает popup
+  вида `permission` под адресной строкой. Окно закрыли без ответа —
+  запрос ждёт, значок в адресной строке открывает его снова. Переход на
+  другой сайт или закрытие вкладки отменяют запросы.
+- `set_preference` в `on_context_initialized` не работает (контекст профиля
+  ещё не готов): настройки применяются при создании первого браузера.
+  Пустая `CefString` для текста ошибки уходит в CEF нулевым указателем —
+  передавайте непустую.
+- `RUSTIUM_DEBUG_PERMISSIONS=1` печатает запросы разрешений. Chromium
+  не показывает запросы невидимым вкладкам: если окно перекрыто или экран
+  выключен (`document.visibilityState === 'hidden'`), для автотестов
+  запускайте с `--disable-backgrounding-occluded-windows`.
+- Браузер по умолчанию (macOS): `LSSetDefaultHandlerForURLScheme`, ссылки
+  из других приложений приходят Apple Event `GURL`
+  (`mac::install_url_handler` → `shell::open_external`). Схемы http/https
+  и тексты запросов камеры/микрофона/геопозиции дописывает в Info.plist
+  `bundle.rs`. Не нажимать «Make default» при проверках: это меняет
+  настройку системы пользователя.
+
 ## Правила кода
 
 - **Не держать `Shell::state` заблокированным во время вызовов CEF.** CEF
@@ -144,11 +183,9 @@ WebSocket-мост (127.0.0.1, случайный порт, секретный �
 
 ## Дальнейшие шаги (по приоритету)
 
-- `DownloadHandler`: загрузки с диалогом «Сохранить» и индикатором в панели.
-- `PermissionHandler`: запросы камеры, микрофона, геолокации с UI в панели.
-- Служебные страницы на `rustium://`: настройки, история (общий каркас
-  с боковым меню).
-- История и закладки (SQLite), подсказки в адресной строке.
-- Восстановление сессии, перетаскивание вкладок, закрепление.
+- История (SQLite), cookies и данные сайтов, «Очистить данные» — разделы
+  «Your data» в настройках пока помечены «Soon».
+- Закладки, подсказки в адресной строке.
+- Перетаскивание вкладок, закрепление.
 - Нативное меню macOS (Правка, Окно) вместо ручной обработки Cmd+C/V.
 - Подпись и нотаризация `.app`, установщики (`.dmg`, AppImage/Flatpak).

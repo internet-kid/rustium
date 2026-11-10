@@ -10,6 +10,7 @@
 
 use crate::downloads::{Badge, Download};
 use crate::shell::{Action, Shell, TabId};
+use crate::settings::{self, SettingsCommand};
 use crate::task::post_ui;
 use cef::wrapper::message_router::{BrowserSideCallback, BrowserSideHandler};
 use cef::*;
@@ -71,6 +72,13 @@ pub enum Command {
         dx: f64,
         dy: f64,
     },
+    OpenSettings,
+    /// Ответ в окне запроса разрешения.
+    PermissionDecision {
+        id: u64,
+        allow: bool,
+        remember: bool,
+    },
 }
 
 /// Где показывать DevTools: справа, снизу или отдельным окном.
@@ -105,6 +113,8 @@ pub enum PageCommand {
 pub enum PopupKind {
     Menu,
     Downloads,
+    /// Запрос разрешения сайта (под значком сайта слева).
+    Permission,
 }
 
 /// Прямоугольник кнопки, под которой открывается всплывающее окно.
@@ -156,6 +166,10 @@ impl Command {
             Command::Download { id, action } => Action::Download { id, action },
             Command::SetDevtoolsDock { dock } => Action::SetDevtoolsDock(dock),
             Command::SplitterMove { dx, dy } => Action::SplitterMove { dx, dy },
+            Command::OpenSettings => Action::OpenSettings,
+            Command::PermissionDecision { id, allow, remember } => {
+                Action::PermissionDecision { id, allow, remember }
+            }
         })
     }
 }
@@ -217,6 +231,11 @@ pub struct TabState {
     pub can_go_back: bool,
     pub can_go_forward: bool,
     pub security: Security,
+    /// Страница пользуется камерой / микрофоном.
+    pub camera: bool,
+    pub microphone: bool,
+    /// Сайт ждёт ответа на запрос разрешения.
+    pub permission_pending: bool,
 }
 
 /// Всё, что панель отображает.
@@ -241,6 +260,8 @@ pub struct UiState {
     pub devtools_dock: Dock,
     /// У активной вкладки открыты DevTools.
     pub devtools_open: bool,
+    /// Запрос разрешения активной вкладки.
+    pub permission: Option<crate::shell::PromptView>,
 }
 
 /// Обработчик запросов `cefQuery` из панели и всплывающих окон.
@@ -277,12 +298,24 @@ impl BrowserSideHandler for ToolbarQueryHandler {
         };
 
         let main_frame = frame.as_ref().is_some_and(|f| f.is_main() != 0);
-        // Служебная страница rustium:// во вкладке: только PageCommand.
-        let service_tab = main_frame
-            && frame
-                .as_ref()
-                .is_some_and(|f| CefString::from(&f.url()).to_string().starts_with("rustium://"));
-        if let (true, Some(tab)) = (service_tab, browser.as_ref().and_then(|b| shell.tab_of(b))) {
+        let frame_url = frame
+            .as_ref()
+            .map(|f| CefString::from(&f.url()).to_string())
+            .unwrap_or_default();
+        // Служебная страница rustium:// во вкладке: только её команды.
+        let service_tab = main_frame && frame_url.starts_with("rustium://");
+        let tab = browser.as_ref().and_then(|b| shell.tab_of(b));
+        let settings_page = frame_url == "rustium://settings"
+            || frame_url.starts_with("rustium://settings/")
+            || frame_url.starts_with("rustium://settings?");
+        if let (true, true, Some(_)) = (service_tab, settings_page, tab) {
+            match serde_json::from_str::<SettingsCommand>(request) {
+                Ok(command) => settings_command(&shell, browser, command, reply_owned(callback)),
+                Err(err) => reply(Err((400, err.to_string()))),
+            }
+            return true;
+        }
+        if let (true, Some(tab)) = (service_tab, tab) {
             match serde_json::from_str::<PageCommand>(request) {
                 Ok(command) => {
                     reply(Ok(String::new()));
@@ -313,6 +346,85 @@ impl BrowserSideHandler for ToolbarQueryHandler {
             Err(err) => reply(Err((400, err.to_string()))),
         }
         true
+    }
+}
+
+type Reply = Box<dyn FnOnce(Result<String, (i32, String)>) + Send>;
+
+fn reply_owned(callback: Arc<Mutex<dyn BrowserSideCallback>>) -> Reply {
+    Box::new(move |result| {
+        if let Ok(cb) = callback.lock() {
+            match result {
+                Ok(body) => cb.success_str(&body),
+                Err((code, msg)) => cb.failure(code, &msg),
+            }
+        }
+    })
+}
+
+/// Команды страницы настроек. CEF зовём только то, что не вызывает наши
+/// обработчики синхронно; остальное — через post_ui.
+fn settings_command(shell: &Arc<Shell>, browser: Option<Browser>, command: SettingsCommand, reply: Reply) {
+    match command {
+        SettingsCommand::GetSettings => reply(Ok(settings::settings_json(true))),
+        SettingsCommand::SetSettings { prefs } => match crate::prefs::set(*prefs) {
+            Ok((new, old)) => {
+                reply(Ok(settings::settings_json(false)));
+                let shell = shell.clone();
+                post_ui(move || {
+                    settings::apply_changes(&new, &old);
+                    shell.reapply_site_settings();
+                });
+            }
+            Err(message) => reply(Err((400, message))),
+        },
+        SettingsCommand::ChooseDownloadDir => {
+            let Some(host) = browser.and_then(|b| b.host()) else {
+                reply(Ok(r#"{"dir":null}"#.into()));
+                return;
+            };
+            let current = crate::prefs::get()
+                .downloads
+                .dir
+                .unwrap_or_else(|| crate::downloads::downloads_dir().to_string_lossy().into_owned());
+            let reply = Arc::new(Mutex::new(Some(reply)));
+            post_ui(move || {
+                let mut callback = FolderChosen::new(reply);
+                host.run_file_dialog(
+                    FileDialogMode::OPEN_FOLDER,
+                    Some(&CefString::from("Choose a download folder")),
+                    Some(&CefString::from(current.as_str())),
+                    None,
+                    Some(&mut callback),
+                );
+            });
+        }
+        SettingsCommand::MakeDefaultBrowser => {
+            let value = settings::make_default_browser();
+            reply(Ok(serde_json::json!({ "defaultBrowser": value }).to_string()));
+        }
+        SettingsCommand::OpenProxySettings => {
+            reply(Ok("null".into()));
+            post_ui(settings::open_proxy_settings);
+        }
+    }
+}
+
+wrap_run_file_dialog_callback! {
+    struct FolderChosen {
+        reply: Arc<Mutex<Option<Reply>>>,
+    }
+
+    impl RunFileDialogCallback {
+        fn on_file_dialog_dismissed(&self, file_paths: Option<&mut CefStringList>) {
+            let dir = file_paths
+                .map(std::mem::take)
+                .and_then(|list| list.into_iter().next());
+            let reply = self.reply.lock().ok().and_then(|mut r| r.take());
+            if let Some(reply) = reply {
+                reply(Ok(serde_json::json!({ "dir": dir }).to_string()));
+            }
+        }
     }
 }
 
@@ -367,6 +479,9 @@ mod tests {
                 can_go_back: false,
                 can_go_forward: true,
                 security: Security::Secure,
+                camera: false,
+                microphone: false,
+                permission_pending: false,
             }],
             active: Some(1),
             fullscreen: false,
@@ -378,6 +493,7 @@ mod tests {
             popup: Some(PopupKind::Menu),
             devtools_dock: Dock::Bottom,
             devtools_open: false,
+            permission: None,
         };
         let json = serde_json::to_string(&s).unwrap();
         assert!(json.contains("\"canGoForward\":true"));

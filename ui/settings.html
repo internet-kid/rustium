@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings</title>
+<style>
+/*@font-geist*/
+/* Design: docs/design/Settings*.dc.html, tokens and states: Components.dc.html. */
+:root {
+  color-scheme: dark;
+  --bg: #16181e;
+  --side: #121419;
+  --card: #1d2027;
+  --fg: #eceef3;
+  --fg2: #c9cdd6;
+  --dim: #9aa0ad;
+  --off: #6b7180;
+  --off-icon: #4a4f5c;
+  --line: rgba(255,255,255,.06);
+  --accent: #8b7cff;
+  --accent-soft: #8b7cff2e;
+  --link: #b4abff;
+  --ok: #5ee6b8;
+  --err: #ff8a80;
+  --ring-bg: #16181e;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.35 Geist, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--link); }
+a:hover { color: #d4ceff; }
+button, input, select { font: inherit; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.app { display: flex; height: 100vh; }
+
+/* ---------- Sidebar ---------- */
+.side {
+  width: 248px; flex: none; padding: 20px 12px;
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--side); border-right: 1px solid rgba(255,255,255,.05);
+  overflow-y: auto;
+}
+.brand { height: 32px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px; margin-bottom: 8px; font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.sfield {
+  position: relative; height: 32px; flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 0 10px; margin-bottom: 12px; border-radius: 8px; background: var(--card); color: var(--dim);
+}
+.sfield:focus-within { box-shadow: 0 0 0 2px var(--accent); color: var(--fg2); }
+.sfield:focus-within > svg { color: var(--accent); }
+.sfield.has-value { padding-right: 4px; }
+.sfield input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--fg); font-size: 13px; padding: 0; }
+.sfield input::placeholder { color: var(--dim); }
+.sfield input::-webkit-search-cancel-button { display: none; -webkit-appearance: none; }
+.sclear { width: 22px; height: 22px; flex: none; border: 0; padding: 0; border-radius: 6px; background: #2a2e37; color: var(--fg2); display: grid; place-items: center; cursor: pointer; }
+.sclear:hover { background: #343844; color: var(--fg); }
+.sclear:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+.sclear[hidden] { display: none; }
+.navgroups { display: flex; flex-direction: column; gap: 1px; transition: opacity .15s; }
+.navgroups.dim { opacity: .45; }
+.navgroups.dim:hover, .navgroups.dim:focus-within { opacity: 1; }
+.ghead { padding: 0 10px 6px; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); }
+.ghead.next { padding-top: 14px; }
+.nav-a, .nav-off {
+  height: 32px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px;
+  border-radius: 8px; color: var(--fg2); text-decoration: none; white-space: nowrap;
+}
+.nav-a > span, .nav-off > span.lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.nav-a > svg, .nav-off > svg { flex: none; }
+.nav-a:hover { background: rgba(255,255,255,.04); color: var(--fg); }
+.nav-a:active { background: rgba(255,255,255,.07); }
+.nav-a[aria-current="page"] { background: var(--accent-soft); color: var(--fg); font-weight: 500; }
+.nav-a[aria-current="page"] > svg { color: var(--accent); }
+.nav-a:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.nav-off { color: var(--off); cursor: default; }
+.nav-off.later { height: 30px; }
+.soon { flex: none; font-size: 10.5px; font-weight: 400; line-height: 1.4; padding: 1px 6px; border-radius: 5px; background: var(--card); color: var(--dim); }
+.card .soon, .pcard .soon { background: #262a33; }
+
+/* ---------- Main column ---------- */
+.main { flex: 1; min-width: 0; overflow-y: auto; padding: 36px 56px 96px; }
+.page { max-width: 720px; display: flex; flex-direction: column; gap: 28px; }
+.page.tight { gap: 20px; }
+.phead { display: flex; flex-direction: column; gap: 6px; }
+h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+.lead { margin: 0; font-size: 13.5px; color: var(--dim); }
+.block { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.block > h2 { margin: 0; font-size: 13px; font-weight: 600; }
+fieldset.block { gap: 0; }
+fieldset.block > legend { padding: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--fg); }
+.card {
+  --ring-bg: var(--card);
+  display: flex; flex-direction: column; border-radius: 12px; background: var(--card);
+  border: 1px solid var(--line); overflow: hidden;
+}
+.card > * + * { border-top: 1px solid var(--line); }
+.row { min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 16px; }
+.row.tall { min-height: 56px; }
+.row.lg { min-height: 60px; gap: 14px; }
+.rt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.t { font-size: 13.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.s { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.row.off .t { color: var(--off); }
+.row.off .s { color: var(--off); }
+.badge { font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: var(--accent-soft); color: var(--fg); }
+mark { background: var(--accent-soft); color: var(--fg); border-radius: 3px; padding: 0 1px; }
+
+/* radio (Components: Checkbox & radio) */
+.rlabel { position: relative; flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: 12px; margin: -8px 0; padding: 8px 0; cursor: pointer; }
+.vis-hidden { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.radio { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.28); display: grid; place-items: center; transition: border-color .12s; }
+.radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: scale(0); transition: transform .12s; }
+input:checked + .radio { border-color: var(--accent); }
+input:checked + .radio::after { transform: scale(1); }
+label:hover > input:not(:checked):not(:disabled) + .radio { border-color: rgba(255,255,255,.45); }
+input:focus-visible + .radio { box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+input:disabled + .radio { border-color: rgba(255,255,255,.1); }
+
+/* switch */
+.switch { position: relative; width: 38px; height: 22px; flex: none; border: 0; padding: 0; border-radius: 11px; background: #3a3f4b; cursor: pointer; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--fg2); transition: left .15s, background .15s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { left: 19px; background: #fff; }
+.switch:hover:not(:disabled) { filter: brightness(1.1); }
+.switch:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+.switch:disabled { background: #2a2e37; cursor: default; }
+.switch:disabled::after { background: var(--off-icon); }
+
+/* buttons */
+.btn {
+  height: 30px; padding: 0 12px; flex: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: transparent; color: var(--fg2);
+  font-size: 12.5px; cursor: pointer;
+}
+.btn:hover { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: var(--fg); }
+.btn:active { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.10); color: var(--fg); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); color: var(--fg); }
+.btn:disabled { border-color: rgba(255,255,255,.06); background: transparent; color: var(--off-icon); cursor: default; }
+.btn.lg { height: 32px; padding: 0 14px; font-size: 13px; font-weight: 500; color: var(--fg); }
+.btn.lg:disabled { color: var(--off-icon); }
+.btn.sm { height: 28px; padding: 0 10px; border-radius: 7px; }
+.btn-primary {
+  height: 32px; padding: 0 14px; flex: none; white-space: nowrap; border: 0; border-radius: 8px;
+  background: var(--accent); color: #0e0f13; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { box-shadow: inset 0 0 0 40px rgba(255,255,255,.14); }
+.btn-primary:active { box-shadow: inset 0 0 0 40px rgba(0,0,0,.16); }
+.btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+.btn-primary:disabled { background: #2a2e37; color: var(--off); box-shadow: none; cursor: default; }
+.btn-primary.sm { height: 30px; }
+.ghost { height: 28px; padding: 0 10px; flex: none; border: 0; border-radius: 7px; background: transparent; color: var(--link); font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.ghost:hover { background: rgba(255,255,255,.06); color: #d4ceff; }
+.ghost:active { background: rgba(255,255,255,.10); color: #d4ceff; }
+.ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+.ghost:disabled { color: var(--off-icon); background: transparent; cursor: default; }
+.xbtn { width: 26px; height: 26px; flex: none; border: 0; padding: 0; border-radius: 7px; background: transparent; color: var(--dim); display: grid; place-items: center; cursor: pointer; }
+.xbtn:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+.xbtn:active { background: rgba(255,255,255,.10); color: var(--fg); }
+.xbtn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); color: var(--fg); }
+
+/* select & text input */
+.sel {
+  height: 32px; max-width: 240px; min-width: 0; flex: none; padding: 0 30px 0 10px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1); color: var(--fg); font-size: 13px; cursor: pointer;
+  -webkit-appearance: none; appearance: none; text-overflow: ellipsis;
+  background: #16181e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%239aa0ad' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center / 13px 13px;
+}
+.sel:hover { border-color: rgba(255,255,255,.2); }
+.sel:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+.sel:disabled {
+  border-color: rgba(255,255,255,.05); color: var(--off); cursor: default;
+  background: rgba(255,255,255,.02) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%234a4f5c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center / 13px 13px;
+}
+.sel option { background: #22252d; color: var(--fg); }
+.txt { width: 100%; min-width: 0; height: 30px; padding: 0 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: #121419; color: var(--fg); font-size: 13px; outline: none; }
+.txt::placeholder { color: var(--off); }
+.txt:hover { border-color: rgba(255,255,255,.2); }
+.txt:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--ring-bg), 0 0 0 4px var(--accent); }
+.txt:disabled { border-color: rgba(255,255,255,.05); background: rgba(255,255,255,.02); color: var(--off); }
+
+/* monograms */
+.mg { width: 18px; height: 18px; flex: none; border-radius: 5px; font-size: 10px; font-weight: 700; line-height: 1; display: grid; place-items: center; }
+.mg.lg { width: 24px; height: 24px; border-radius: 7px; font-size: 12px; }
+
+/* general */
+.subrows { display: flex; flex-direction: column; padding: 4px 16px 8px 44px; }
+.subrows .item { height: 40px; display: flex; align-items: center; gap: 10px; }
+.subrows .item .u { flex: 1; min-width: 0; font-size: 13px; color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addrow { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.addrow .txt { flex: 1; }
+.muted { font-size: 12.5px; color: var(--off); padding: 8px 0; }
+.okmark { flex: none; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ok); }
+.row-col { display: flex; flex-direction: column; }
+.row-col > .row { padding-bottom: 8px; }
+.dns-custom { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+/* permissions */
+.perm { display: flex; align-items: flex-start; gap: 16px; }
+.plist { list-style: none; margin: 0; padding: 0; width: 300px; flex: none; border-radius: 12px; background: var(--card); border: 1px solid var(--line); overflow: hidden; }
+.plist li + li { border-top: 1px solid var(--line); }
+.pitem { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 14px; color: var(--fg); text-decoration: none; }
+.pitem:hover { background: rgba(255,255,255,.03); color: var(--fg); }
+.pitem > .pi { color: var(--fg2); flex: none; }
+.pitem > .pl { flex: 1; min-width: 0; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pitem > .pv { font-size: 12px; color: var(--dim); }
+.pitem > .chev { color: var(--dim); flex: none; }
+.pitem[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.pitem[aria-current="true"] > .pi { color: var(--accent); }
+.pitem[aria-current="true"] > .pl { font-weight: 500; }
+.pitem[aria-current="true"] > .pv, .pitem[aria-current="true"] > .chev { color: var(--fg2); }
+.pitem:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.pcard { --ring-bg: var(--card); flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding: 18px 18px 20px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.pchead { display: flex; align-items: center; gap: 10px; }
+.picon { width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.pchead h2 { margin: 0; flex: 1; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.dfl { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dfl legend { padding: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--dim); }
+.crad { position: relative; min-height: 34px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13.5px; }
+.note { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--dim); padding-top: 12px; border-top: 1px solid var(--line); }
+.note svg { flex: none; margin-top: 1px; }
+.xlist { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.xhead { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; }
+.xhead h3 { margin: 0; flex: 1; min-width: 0; font-size: 12px; font-weight: 500; color: var(--dim); }
+.xlist ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.xlist li { height: 40px; display: flex; align-items: center; gap: 10px; }
+.xlist .host { flex: 1; min-width: 0; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill-blocked { flex: none; font-size: 11px; padding: 2px 7px; border-radius: 5px; background: rgba(255,138,128,.12); color: var(--err); }
+
+/* search results */
+.sgroup { display: flex; flex-direction: column; gap: 10px; }
+.sghead { display: flex; align-items: center; gap: 8px; }
+.sghead > svg { color: var(--dim); flex: none; }
+.sghead h2 { margin: 0; flex: 1; font-size: 13px; font-weight: 600; }
+.sghead a { font-size: 12.5px; text-decoration: none; border-radius: 4px; }
+.sghead a:focus-visible, .didyou a:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+.linkrow { color: var(--fg); text-decoration: none; }
+a.linkrow:hover { background: rgba(255,255,255,.03); color: var(--fg); }
+a.linkrow:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.linkrow > .pi { color: var(--fg2); flex: none; }
+.linkrow > .pv { font-size: 12px; color: var(--dim); }
+.linkrow > .chev { color: var(--dim); flex: none; }
+.linkrow.off > .pi, .linkrow.off > .chev { color: var(--off-icon); }
+.emptycard { --ring-bg: var(--card); display: flex; align-items: center; gap: 22px; padding: 22px 24px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.emptycard .txtcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.emptycard p { margin: 0; }
+.emptycard .big { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.emptycard .sm { font-size: 13px; color: var(--dim); }
+.didyou { margin-top: 4px !important; }
+.didyou a { text-decoration: none; font-weight: 500; }
+
+/* about */
+.about { display: flex; align-items: flex-start; gap: 18px; padding: 22px 22px 20px; }
+.about svg { flex: none; }
+.about .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.about h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.about .ver { font-size: 13.5px; color: var(--fg2); }
+.about .meta { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 12px; color: var(--dim); user-select: text; -webkit-user-select: text; overflow-wrap: anywhere; }
+.about .blurb { margin: 12px 0 0; font-size: 12px; color: var(--dim); }
+
+/* toast */
+.toast {
+  --ring-bg: #2a2e37;
+  position: fixed; left: 50%; bottom: 24px; z-index: 10; max-width: calc(100vw - 32px);
+  min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px;
+  border-radius: 12px; background: #2a2e37; border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 13px;
+  opacity: 0; transform: translate(-50%, 10px); pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast.noaction { padding-right: 14px; }
+.toast.err { color: var(--err); }
+.toast svg { flex: none; }
+.loading { color: var(--dim); font-size: 13.5px; }
+
+@media (max-width: 1000px) {
+  .side { width: 216px; }
+  .main { padding: 28px 32px 96px; }
+  .perm { flex-direction: column; align-items: stretch; }
+  .plist { width: auto; }
+  .pcard { width: 100%; }
+}
+@media (max-width: 840px) {
+  .side { width: 196px; padding: 16px 8px; }
+  .main { padding: 24px 24px 96px; }
+  .row { flex-wrap: wrap; }
+  .row > .rt, .row > .rlabel { flex-basis: 180px; }
+  .emptycard { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side" aria-label="Settings">
+    <div class="brand">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 48 48" fill="none"><path d="M24 3l18.2 10.5v21L24 45 5.8 34.5v-21z" fill="#8b7cff"/><path d="M24 14l8.7 5v10L24 34l-8.7-5V19z" fill="#121419"/></svg>
+      <span>Rustium</span>
+    </div>
+    <label class="sfield" id="sfield">
+      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <span class="sr-only">Search settings</span>
+      <input id="q" type="search" placeholder="Search settings" autocomplete="off" spellcheck="false" aria-controls="content">
+      <button type="button" class="sclear" id="qclear" aria-label="Clear search" hidden><svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </label>
+    <div class="navgroups" id="nav"></div>
+  </nav>
+  <main class="main" id="main">
+    <div id="content" class="page" aria-live="off"><p class="loading">Loading settings…</p></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ======================= Bridge ======================= */
+function call(cmd, extra = {}) {
+  if (typeof window.cefQuery !== 'function') return mockCall(cmd, extra);
+  return new Promise((resolve, reject) => {
+    window.cefQuery({
+      request: JSON.stringify({ cmd, ...extra }),
+      onSuccess: (r) => { try { resolve(r ? JSON.parse(r) : null); } catch (e) { reject(e); } },
+      onFailure: (code, msg) => reject(new Error(msg || String(code))),
+    });
+  });
+}
+
+/* Dev mode: the page opened as a plain file, without the browser. */
+const MOCK = {
+  prefs: {
+    startup: { mode: 'restore', pages: ['https://example.com/'] },
+    searchEngine: 'duckduckgo',
+    language: 'en-US',
+    cookies: 'blockThirdParty',
+    doNotTrack: false,
+    httpsOnly: false,
+    secureDns: { enabled: false, provider: 'cloudflare', custom: '' },
+    downloads: { dir: null, ask: false },
+    hardwareAcceleration: true,
+    permissions: {
+      camera: { default: 'ask', allow: ['https://meet.example.com'], block: [] },
+      microphone: { default: 'ask', allow: [], block: [] },
+      location: { default: 'ask', allow: [], block: [] },
+      notifications: { default: 'block', allow: [], block: [] },
+      clipboard: { default: 'ask', allow: [], block: [] },
+      popups: { default: 'block', allow: [], block: [] },
+      javascript: { default: 'allow', allow: [], block: [] },
+      sound: { default: 'allow', allow: [], block: [] },
+      autoplay: { default: 'block', allow: [], block: [] },
+    },
+  },
+  info: {
+    version: '0.1.0', chromium: '156.0.8078.88', cef: '156.0.26', platform: 'macos',
+    profile: '/Users/you/Library/Application Support/Rustium/Default',
+    downloadsDefault: '/Users/you/Downloads', defaultBrowser: false,
+  },
+};
+function mockUrl(s, origin) {
+  s = String(s || '').trim();
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) s = 'https://' + s;
+  let u;
+  try { u = new URL(s); } catch (_) { throw new Error('Not a valid site address'); }
+  if (!u.hostname.includes('.') && u.hostname !== 'localhost') throw new Error('Not a valid site address');
+  return origin ? u.origin : u.href;
+}
+function mockCall(cmd, extra) {
+  return new Promise((resolve, reject) => setTimeout(() => {
+    try {
+      if (cmd === 'getSettings') resolve(clone({ prefs: MOCK.prefs, info: MOCK.info }));
+      else if (cmd === 'setSettings') {
+        const p = clone(extra.prefs);
+        p.startup.pages = [...new Set(p.startup.pages.map((x) => mockUrl(x, false)))];
+        for (const k of Object.keys(p.permissions)) {
+          const e = p.permissions[k];
+          e.allow = [...new Set(e.allow.map((x) => mockUrl(x, true)))];
+          e.block = [...new Set(e.block.map((x) => mockUrl(x, true)))].filter((x) => !e.allow.includes(x));
+        }
+        MOCK.prefs = p;
+        resolve(clone({ prefs: p }));
+      } else if (cmd === 'chooseDownloadDir') resolve({ dir: '/Users/you/Documents/Downloads' });
+      else if (cmd === 'makeDefaultBrowser') { MOCK.info.defaultBrowser = true; resolve({ defaultBrowser: true }); }
+      else if (cmd === 'openProxySettings') resolve(null);
+      else reject(new Error('Unknown command'));
+    } catch (e) { reject(e); }
+  }, 60));
+}
+
+/* ======================= Helpers ======================= */
+function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'fk') el.dataset.fk = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'checked' || k === 'disabled' || k === 'value' || k === 'selected') el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  append(el, kids);
+  return el;
+}
+function append(el, kids) {
+  for (const k of kids) {
+    if (k == null || k === false) continue;
+    if (Array.isArray(k)) append(el, k);
+    else el.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  }
+}
+let uidN = 0;
+const uid = (p) => `${p}-${++uidN}`;
+
+const ICONS = {
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  appearance: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  shield: '<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/>',
+  camera: '<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  chip: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
+  hex: '<path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  star: '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  cookie: '<path d="M21 12.5A9 9 0 1 1 11.5 3a3 3 0 0 0 4 4 3 3 0 0 0 5.5 5.5z"/><path d="M8.5 9.5v.01M15.5 15.5v.01M10 15v.01"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
+  puzzle: '<path d="M10 3h4v3a2 2 0 1 0 4 0V3h3v7h-3a2 2 0 1 0 0 4h3v7h-7v-3a2 2 0 1 0-4 0v3H3v-7h3a2 2 0 1 0 0-4H3V3z"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  location: '<path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  clipboard: '<rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>',
+  popup: '<path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M15 3h6v6M21 3l-9 9"/>',
+  js: '<path d="M8 4c-2 0-3 1-3 3v2c0 1.5-1 3-2 3 1 0 2 1.5 2 3v2c0 2 1 3 3 3M16 4c2 0 3 1 3 3v2c0 1.5 1 3 2 3-1 0-2 1.5-2 3v2c0 2-1 3-3 3"/>',
+  sound: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+  autoplay: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  check: '<path d="M5 12l5 5 9-10"/>',
+  x: '<path d="M18 6L6 18M6 6l12 12"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chevron: '<path d="M9 6l6 6-6 6"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>',
+};
+function icon(name, size = 15, sw = 2, cls) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('aria-hidden', 'true');
+  s.setAttribute('width', size); s.setAttribute('height', size);
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none');
+  s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', sw);
+  s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+  if (cls) s.setAttribute('class', cls);
+  s.innerHTML = ICONS[name];
+  return s;
+}
+function logo(size, inner) {
+  const t = document.createElement('template');
+  t.innerHTML = `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 48 48" fill="none"><path d="M24 3l18.2 10.5v21L24 45 5.8 34.5v-21z" fill="#8b7cff"/><path d="M24 14l8.7 5v10L24 34l-8.7-5V19z" fill="${inner}"/></svg>`;
+  return t.content.firstChild;
+}
+
+const PALETTE = [
+  ['#5ee6b8', '#0e0f13'], ['#3b82f6', '#fff'], ['#f97316', '#fff'],
+  ['#a78bfa', '#0e0f13'], ['#f472b6', '#0e0f13'], ['#facc15', '#0e0f13'],
+];
+function hostOf(s) { return String(s).replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/\/.*$/, ''); }
+function monogram(host, cls = 'mg') {
+  const name = host.replace(/^www\./, '');
+  let hsh = 0;
+  for (const c of name) hsh = (hsh * 31 + c.codePointAt(0)) >>> 0;
+  const [bg, fg] = PALETTE[hsh % PALETTE.length];
+  const span = h('span', { class: cls, 'aria-hidden': 'true' }, (name[0] || '?').toUpperCase());
+  span.style.background = bg; span.style.color = fg;
+  return span;
+}
+
+/* ======================= Static data ======================= */
+const SECTIONS = [
+  { id: 'general', title: 'General', sub: 'Startup behavior, default browser and languages.', icon: 'gear' },
+  { id: 'search', title: 'Search engine', sub: 'Used when you type something that isn’t an address.', icon: 'search' },
+  { id: 'privacy', title: 'Privacy & security', sub: 'Cookies, tracking protection and secure connections.', icon: 'shield' },
+  { id: 'permissions', title: 'Site permissions', sub: 'Choose what sites can use by default, and make exceptions for specific sites.', icon: 'camera' },
+  { id: 'downloads', title: 'Downloads', sub: 'Where downloaded files are saved.', icon: 'folder' },
+  { id: 'system', title: 'System', sub: 'Performance and network.', icon: 'chip' },
+  { id: 'about', title: 'About Rustium', sub: 'Version and build information.', icon: 'hex' },
+];
+const SECTION_BY_ID = Object.fromEntries(SECTIONS.map((s) => [s.id, s]));
+const DATA_GROUP = { id: 'data', title: 'Your data', icon: 'clock' };
+
+const LANGUAGES = [
+  ['en-US', 'English (US)'], ['en-GB', 'English (UK)'], ['ru', 'Русский'], ['uk', 'Українська'],
+  ['de', 'Deutsch'], ['fr', 'Français'], ['es', 'Español'], ['it', 'Italiano'],
+  ['pt-BR', 'Português (Brasil)'], ['pl', 'Polski'], ['tr', 'Türkçe'], ['zh-CN', '中文（简体）'],
+  ['ja', '日本語'], ['ko', '한국어'],
+];
+const ENGINES = [
+  { id: 'duckduckgo', label: 'DuckDuckGo', host: 'duckduckgo.com', color: '#de5833' },
+  { id: 'google', label: 'Google', host: 'google.com', color: '#3b82f6' },
+  { id: 'bing', label: 'Bing', host: 'bing.com', color: '#0ea5e9' },
+  { id: 'brave', label: 'Brave Search', host: 'search.brave.com', color: '#fb542b' },
+  { id: 'startpage', label: 'Startpage', host: 'startpage.com', color: '#6573ff' },
+  { id: 'ecosia', label: 'Ecosia', host: 'ecosia.org', color: '#22a06b' },
+];
+const DNS = [
+  ['cloudflare', 'Cloudflare (1.1.1.1)'], ['google', 'Google (8.8.8.8)'],
+  ['quad9', 'Quad9 (9.9.9.9)'], ['custom', 'Custom…'],
+];
+const PERMS = [
+  { kind: 'camera', label: 'Camera', icon: 'camera', type: 'ask', kw: 'webcam video',
+    on: 'Ask before accessing', offT: 'Don’t allow sites to use your camera',
+    allowH: 'Allowed to use your camera', blockH: 'Not allowed to use your camera' },
+  { kind: 'microphone', label: 'Microphone', icon: 'mic', type: 'ask', kw: 'mic audio voice',
+    on: 'Ask before accessing', offT: 'Don’t allow sites to use your microphone',
+    allowH: 'Allowed to use your microphone', blockH: 'Not allowed to use your microphone' },
+  { kind: 'location', label: 'Location', icon: 'location', type: 'ask', kw: 'geolocation gps',
+    on: 'Ask before accessing', offT: 'Don’t allow sites to see your location',
+    allowH: 'Allowed to see your location', blockH: 'Not allowed to see your location' },
+  { kind: 'notifications', label: 'Notifications', icon: 'bell', type: 'ask', kw: 'push alerts',
+    on: 'Ask before sending', offT: 'Don’t allow sites to send notifications',
+    allowH: 'Allowed to send notifications', blockH: 'Not allowed to send notifications',
+    note: 'Rustium can’t display notifications yet; allowed sites won’t show them.' },
+  { kind: 'clipboard', label: 'Clipboard', icon: 'clipboard', type: 'ask', kw: 'copy paste',
+    on: 'Ask before reading the clipboard', offT: 'Don’t allow sites to read your clipboard',
+    allowH: 'Allowed to read your clipboard', blockH: 'Not allowed to read your clipboard' },
+  { kind: 'popups', label: 'Pop-ups and redirects', icon: 'popup', type: 'allow', kw: 'popup windows',
+    on: 'Sites can show pop-ups and redirects', offT: 'Don’t allow sites to show pop-ups or use redirects',
+    allowH: 'Allowed to show pop-ups and redirects', blockH: 'Not allowed to show pop-ups and redirects' },
+  { kind: 'javascript', label: 'JavaScript', icon: 'js', type: 'allow', kw: 'scripts js',
+    on: 'Sites can use JavaScript', offT: 'Don’t allow sites to use JavaScript',
+    allowH: 'Allowed to use JavaScript', blockH: 'Not allowed to use JavaScript' },
+  { kind: 'sound', label: 'Sound', icon: 'sound', type: 'allow', kw: 'audio mute',
+    on: 'Sites can play sound', offT: 'Mute sites that play sound',
+    allowH: 'Allowed to play sound', blockH: 'Muted' },
+  { kind: 'autoplay', label: 'Autoplay video', icon: 'autoplay', type: 'allow', kw: 'media video sound', noLists: true,
+    on: 'Sites can autoplay video with sound', offT: 'Don’t allow autoplay with sound',
+    note: 'Applies after you restart Rustium.' },
+];
+const PERM_BY_KIND = Object.fromEntries(PERMS.map((p) => [p.kind, p]));
+const VALUE_LABEL = { ask: 'Ask', allow: 'Allowed', block: 'Blocked' };
+
+/* ======================= State ======================= */
+let prefs = null;       // what the UI shows (may include an optimistic change)
+let lastGood = null;    // last prefs confirmed by Rust
+let info = null;
+let route = { section: 'general', kind: null };
+let query = '';
+let prevRoute = null;
+let adding = null;      // { key, value } — inline "add page/site" input
+let dnsDraft = null;    // unsaved custom DoH template text
+let pendingSaves = 0;
+let saveChain = Promise.resolve();
+let defaultBusy = false;
+
+/* ======================= Routing ======================= */
+// Outside the browser (file:, data:, a dev server) the route lives in location.hash.
+const FILE_MODE = location.protocol !== 'rustium:';
+const PREFIX = !FILE_MODE && location.pathname.startsWith('//settings') ? '//settings' : '';
+
+function readLocation() {
+  let path, search;
+  if (FILE_MODE) {
+    const raw = location.hash.replace(/^#/, '') || '/';
+    const i = raw.indexOf('?');
+    path = i < 0 ? raw : raw.slice(0, i);
+    search = i < 0 ? '' : raw.slice(i);
+  } else {
+    path = location.pathname.slice(PREFIX.length) || '/';
+    search = location.search;
+  }
+  const seg = path.split('/').filter(Boolean);
+  const section = SECTION_BY_ID[seg[0]] ? seg[0] : 'general';
+  const kind = section === 'permissions' && PERM_BY_KIND[seg[1]] ? seg[1] : null;
+  const q = new URLSearchParams(search).get('search') || '';
+  return { section, kind, q };
+}
+function routePath(r) { return '/' + r.section + (r.kind ? '/' + r.kind : ''); }
+function toUrl(path, search = '') { return FILE_MODE ? '#' + path + search : PREFIX + path + search; }
+function setUrl(url, replace) {
+  try { history[replace ? 'replaceState' : 'pushState'](null, '', url); } catch (_) { /* opaque origin */ }
+}
+function go(section, kind = null, { replace = false } = {}) {
+  route = { section, kind };
+  if (query) { query = ''; qInput.value = ''; syncSearchField(); }
+  adding = null;
+  setUrl(toUrl(routePath(route)), replace);
+  render();
+  main.scrollTop = 0;
+}
+function applyLocation() {
+  const r = readLocation();
+  route = { section: r.section, kind: r.kind };
+  query = r.q;
+  if (query && !prevRoute) prevRoute = { ...route };
+  qInput.value = query;
+  syncSearchField();
+  render();
+}
+window.addEventListener('popstate', applyLocation);
+if (FILE_MODE) window.addEventListener('hashchange', applyLocation);
+
+/* ======================= Saving ======================= */
+function commit(mutate) {
+  if (!prefs) return Promise.resolve(false);
+  const next = clone(prefs);
+  mutate(next);
+  prefs = next;
+  render();
+  pendingSaves++;
+  const p = saveChain.then(() => save(next, true));
+  saveChain = p.catch(() => {});
+  return p;
+}
+async function save(next, undoable) {
+  const prev = clone(lastGood);
+  try {
+    const r = await call('setSettings', { prefs: next });
+    lastGood = clone((r && r.prefs) || next);
+    pendingSaves = Math.max(0, pendingSaves - 1);
+    if (pendingSaves === 0) { prefs = clone(lastGood); render(); }
+    if (undoable) showToast({ text: 'Settings saved', undo: () => undo(prev) });
+    else hideToast();
+    return true;
+  } catch (e) {
+    pendingSaves = Math.max(0, pendingSaves - 1);
+    prefs = clone(lastGood);
+    render();
+    showToast({ text: errText(e), error: true });
+    return false;
+  }
+}
+function undo(prev) {
+  hideToast();
+  prefs = clone(prev);
+  adding = null; dnsDraft = null;
+  render();
+  pendingSaves++;
+  const p = saveChain.then(() => save(prev, false));
+  saveChain = p.catch(() => {});
+}
+function errText(e) { return (e && e.message) || 'Couldn’t save settings'; }
+
+/* ======================= Toast ======================= */
+const toast = document.getElementById('toast');
+let toastTimer = 0;
+function showToast({ text, error = false, undo }) {
+  clearTimeout(toastTimer);
+  toast.replaceChildren();
+  toast.className = 'toast show' + (error ? ' err' : '') + (undo ? '' : ' noaction');
+  const ic = error ? icon('alert', 15, 2.2) : icon('check', 15, 2.4);
+  ic.style.color = error ? 'var(--err)' : 'var(--ok)';
+  toast.append(ic, h('span', null, text));
+  if (undo) toast.append(h('button', { type: 'button', class: 'ghost', onclick: undo }, 'Undo'));
+  toastTimer = setTimeout(hideToast, error ? 6000 : 4000);
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  if (toast.contains(document.activeElement)) document.activeElement.blur();
+  toast.classList.remove('show');
+}
+toast.addEventListener('mouseenter', () => clearTimeout(toastTimer));
+toast.addEventListener('mouseleave', () => { if (toast.classList.contains('show')) toastTimer = setTimeout(hideToast, 2500); });
+
+/* ======================= Highlighting ======================= */
+function tokens() { return query.trim().toLowerCase().split(/\s+/).filter(Boolean); }
+function hl(text) {
+  text = String(text);
+  const toks = query ? tokens() : [];
+  if (!toks.length) return text;
+  const low = text.toLowerCase();
+  const marks = new Array(text.length).fill(false);
+  for (const t of toks) {
+    let i = 0;
+    while ((i = low.indexOf(t, i)) >= 0) { for (let j = i; j < i + t.length; j++) marks[j] = true; i += t.length; }
+  }
+  const frag = document.createDocumentFragment();
+  let i = 0;
+  while (i < text.length) {
+    let j = i;
+    while (j < text.length && marks[j] === marks[i]) j++;
+    const part = text.slice(i, j);
+    frag.append(marks[i] ? h('mark', null, part) : document.createTextNode(part));
+    i = j;
+  }
+  return frag;
+}
+
+/* ======================= Control builders ======================= */
+function textCol(title, sub, opts = {}) {
+  return h('span', { class: 'rt' },
+    h('span', { class: 't', id: opts.id }, h('span', null, hl(title)), opts.badge),
+    sub != null && sub !== '' ? h('span', { class: 's' + (opts.mono ? ' mono' : '') }, opts.mono ? sub : hl(sub)) : null);
+}
+function radioRow({ name, value, checked, title, sub, badge, lead, onPick, extra, disabled }) {
+  return h('div', { class: 'row' },
+    h('label', { class: 'rlabel' },
+      h('input', { type: 'radio', class: 'vis-hidden', name, value, checked, disabled, fk: `r:${name}:${value}`,
+        onchange: (e) => { if (e.target.checked) onPick(value); } }),
+      h('span', { class: 'radio', 'aria-hidden': 'true' }),
+      lead,
+      textCol(title, sub, { badge })),
+    extra);
+}
+function switchBtn({ checked, disabled, labelledby, fk, onToggle }) {
+  return h('button', { type: 'button', class: 'switch', role: 'switch', 'aria-checked': String(!!checked),
+    'aria-labelledby': labelledby, disabled, fk, onclick: () => onToggle(!checked) });
+}
+function toggleRow({ title, sub, checked, disabled, fk, onToggle, soon, extra }) {
+  const id = uid('lbl');
+  return h('div', { class: 'row tall' + (disabled ? ' off' : '') },
+    textCol(title, sub, { id, badge: soon ? h('span', { class: 'soon' }, 'Soon') : null }),
+    extra,
+    switchBtn({ checked, disabled, labelledby: id, fk, onToggle }));
+}
+function select({ id, options, value, disabled, onChange, label }) {
+  const opts = options.slice();
+  if (value != null && !opts.some(([v]) => v === value)) opts.push([value, value]);
+  return h('select', { class: 'sel', id, disabled, fk: 'sel:' + id, 'aria-label': label,
+    onchange: (e) => onChange(e.target.value) },
+    opts.map(([v, l]) => h('option', { value: v, selected: v === value }, l)));
+}
+function inlineAdd({ key, placeholder, label, onAdd }) {
+  const input = h('input', { type: 'text', class: 'txt', placeholder, 'aria-label': label, fk: 'in:' + key,
+    value: adding.value, spellcheck: 'false', autocomplete: 'off',
+    oninput: (e) => { adding.value = e.target.value; },
+    onkeydown: (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); }
+    } });
+  const submit = () => {
+    const v = adding.value.trim();
+    if (!v) { input.focus(); return; }
+    onAdd(v);
+  };
+  const cancel = () => { const k = adding.key; adding = null; render(); focusFk('b:add:' + k); };
+  return h('div', { class: 'addrow' }, input,
+    h('button', { type: 'button', class: 'btn-primary sm', fk: 'b:addok:' + key, onclick: submit }, 'Add'),
+    h('button', { type: 'button', class: 'btn', fk: 'b:addcancel:' + key, onclick: cancel }, 'Cancel'));
+}
+function openAdd(key) { adding = { key, value: '' }; render(); focusFk('in:' + key); }
+function focusFk(fk) {
+  const el = document.querySelector(`[data-fk="${CSS.escape(fk)}"]`);
+  if (el) el.focus();
+}
+function linkRow({ iconName, title, sub, value, href, onClick, soon }) {
+  const kids = [icon(iconName, 16, 2, 'pi'), textCol(title, sub),
+    soon ? h('span', { class: 'soon' }, 'Soon') : null,
+    value ? h('span', { class: 'pv' }, value) : null,
+    icon('chevron', 14, 2.2, 'chev')];
+  if (soon) return h('div', { class: 'row linkrow off', 'aria-disabled': 'true' }, kids);
+  return h('a', { class: 'row linkrow', href, fk: 'a:' + href,
+    onclick: (e) => { e.preventDefault(); onClick(); } }, kids);
+}
+
+/* ======================= Row descriptors ======================= */
+/* Every searchable setting is one descriptor. Section pages and search
+   results render the same descriptors, so results are live controls. */
+const ROWS = [];
+function row(d) { ROWS.push(d); return d.id; }
+
+/* --- General --- */
+const STARTUP = [
+  { id: 'restore', title: 'Continue where you left off', sub: 'Reopen the tabs from your last session' },
+  { id: 'newTab', title: 'Open a new tab', sub: '' },
+  { id: 'pages', title: 'Open specific pages', sub: '' },
+];
+for (const o of STARTUP) row({
+  id: 'startup-' + o.id, section: 'general', title: o.title, sub: o.sub,
+  kw: 'on startup launch open session restore homepage home page pages',
+  render() {
+    const pick = (v) => commit((p) => { p.startup.mode = v; });
+    if (o.id !== 'pages') return radioRow({ name: 'startup', value: o.id, checked: prefs.startup.mode === o.id, title: o.title, sub: o.sub, onPick: pick });
+    const key = 'startup';
+    const head = radioRow({ name: 'startup', value: 'pages', checked: prefs.startup.mode === 'pages', title: o.title, onPick: pick,
+      extra: h('button', { type: 'button', class: 'btn', fk: 'b:add:' + key, 'aria-expanded': String(adding?.key === key),
+        onclick: () => openAdd(key) }, 'Add page…') });
+    const showList = prefs.startup.mode === 'pages';
+    const isAdding = adding?.key === key;
+    if (!showList && !isAdding) return head;
+    const pages = prefs.startup.pages;
+    const sub = h('div', { class: 'subrows' },
+      showList && !pages.length && !isAdding ? h('div', { class: 'muted' }, 'No pages yet') : null,
+      showList ? h('ul', { style: 'list-style:none;margin:0;padding:0', 'aria-label': 'Startup pages' },
+        pages.map((u, i) => h('li', { class: 'item' },
+          monogram(hostOf(u)),
+          h('span', { class: 'u', title: u }, u),
+          h('button', { type: 'button', class: 'xbtn', 'aria-label': 'Remove ' + u, fk: 'b:rmpage:' + u,
+            onclick: () => commit((p) => { p.startup.pages.splice(i, 1); }) }, icon('x', 12, 2.4))))) : null,
+      isAdding ? inlineAdd({ key, placeholder: 'Enter a page address', label: 'Page address',
+        onAdd: async (v) => {
+          const ok = await commit((p) => { p.startup.mode = 'pages'; p.startup.pages.push(v); });
+          if (ok && adding?.key === key) { adding = null; render(); focusFk('b:add:' + key); }
+        } }) : null);
+    return [head, sub];
+  },
+});
+row({
+  id: 'default-browser', section: 'general', title: 'Default browser',
+  sub: 'Rustium is your default browser. Make default. Links from other apps',
+  kw: 'default browser make default links other apps',
+  render() {
+    const st = info.defaultBrowser;
+    let title, sub, right;
+    if (st === true) {
+      title = 'Rustium is your default browser'; sub = 'Links from other apps open in Rustium';
+      right = h('span', { class: 'okmark' }, icon('check', 18, 2.4));
+    } else if (st === false) {
+      title = 'Rustium is not your default browser'; sub = 'Links from other apps open in another browser';
+      right = h('button', { type: 'button', class: 'btn-primary', fk: 'b:default', disabled: defaultBusy, onclick: makeDefault }, 'Make default');
+    } else {
+      title = 'Setting the default browser isn’t supported on this system yet'; sub = '';
+    }
+    return h('div', { class: 'row lg' }, logo(28, '#1d2027'), textCol(title, sub), right);
+  },
+});
+async function makeDefault() {
+  defaultBusy = true; render();
+  try {
+    const r = await call('makeDefaultBrowser');
+    if (r && 'defaultBrowser' in r) info.defaultBrowser = r.defaultBrowser;
+  } catch (e) { showToast({ text: errText(e), error: true }); }
+  defaultBusy = false; render();
+  if (info.defaultBrowser === false) focusFk('b:default');
+}
+row({
+  id: 'language', section: 'general', title: 'Preferred language for websites',
+  sub: 'Sites that offer several languages will use this one',
+  kw: 'languages locale accept-language translate ' + LANGUAGES.map((l) => l[1]).join(' '),
+  render() {
+    const id = 'lang';
+    return h('div', { class: 'row tall' },
+      h('label', { for: id, class: 'rt', style: 'cursor:default' },
+        h('span', { class: 't' }, h('span', null, hl(this.title))), h('span', { class: 's' }, hl(this.sub))),
+      select({ id, options: LANGUAGES, value: prefs.language, onChange: (v) => commit((p) => { p.language = v; }) }));
+  },
+});
+
+/* --- Search engine --- */
+for (const e of ENGINES) row({
+  id: 'engine-' + e.id, section: 'search', title: e.label, sub: e.host,
+  kw: 'search engine default search provider address bar',
+  render() {
+    const mg = h('span', { class: 'mg lg', 'aria-hidden': 'true' }, e.label[0]);
+    mg.style.background = e.color; mg.style.color = '#fff';
+    return radioRow({ name: 'engine', value: e.id, checked: prefs.searchEngine === e.id, title: e.label, sub: e.host, lead: mg,
+      onPick: (v) => commit((p) => { p.searchEngine = v; }) });
+  },
+});
+
+/* --- Privacy --- */
+row({
+  id: 'clear-data', section: 'privacy', title: 'Clear browsing data', sub: 'History, cookies, cache, downloads and form data',
+  kw: 'delete erase remove cache',
+  render() {
+    return h('div', { class: 'row lg' },
+      h('span', { 'aria-hidden': 'true', style: 'width:32px;height:32px;flex:none;border-radius:9px;background:#262a33;color:#c9cdd6;display:grid;place-items:center' }, icon('trash', 16)),
+      textCol(this.title, this.sub),
+      h('span', { class: 'soon' }, 'Soon'),
+      h('button', { type: 'button', class: 'btn lg', disabled: true }, 'Clear data…'));
+  },
+});
+const COOKIES = [
+  { id: 'allowAll', title: 'Allow all cookies', sub: 'Sites and embedded content can save and read cookies' },
+  { id: 'blockThirdParty', title: 'Block third-party cookies', sub: 'Stops ads and trackers from following you across sites', rec: true },
+  { id: 'blockAll', title: 'Block all cookies', sub: 'Sites may break, and you will be signed out everywhere' },
+];
+for (const c of COOKIES) row({
+  id: 'cookies-' + c.id, section: 'privacy', title: c.title, sub: c.sub, kw: 'cookie cookies tracking third party site data',
+  render() {
+    return radioRow({ name: 'cookies', value: c.id, checked: prefs.cookies === c.id, title: c.title, sub: c.sub,
+      badge: c.rec ? h('span', { class: 'badge' }, 'Recommended') : null,
+      onPick: (v) => commit((p) => { p.cookies = v; }) });
+  },
+});
+row({
+  id: 'clear-on-quit', section: 'privacy', title: 'Clear cookies and site data when you quit Rustium', sub: '',
+  kw: 'cookie delete exit close',
+  render() { return toggleRow({ title: this.title, checked: false, disabled: true, soon: true, onToggle() {} }); },
+});
+row({
+  id: 'see-cookies', section: 'privacy', title: 'See all cookies and site data', sub: '', kw: 'cookie storage',
+  render() { return linkRow({ iconName: 'cookie', title: this.title, soon: true }); },
+});
+row({
+  id: 'dnt', section: 'privacy', title: 'Send a “Do Not Track” request', sub: 'Ask sites not to track you. Many sites ignore it.',
+  kw: 'do not track dnt tracking privacy',
+  render() {
+    return toggleRow({ title: this.title, sub: this.sub, checked: prefs.doNotTrack, fk: 'sw:dnt',
+      onToggle: (v) => commit((p) => { p.doNotTrack = v; }) });
+  },
+});
+row({
+  id: 'https-only', section: 'privacy', title: 'Always use secure connections (HTTPS-Only)', sub: 'Warn before loading a site that doesn’t support HTTPS',
+  kw: 'https ssl tls secure security encrypted',
+  render() {
+    return toggleRow({ title: this.title, sub: this.sub, checked: prefs.httpsOnly, fk: 'sw:https',
+      onToggle: (v) => commit((p) => { p.httpsOnly = v; }) });
+  },
+});
+row({
+  id: 'secure-dns', section: 'privacy', title: 'Use secure DNS', sub: 'Encrypt lookups so your network can’t see which sites you visit',
+  kw: 'dns doh dns-over-https cloudflare quad9 google resolver',
+  render() {
+    const d = prefs.secureDns;
+    const id = uid('lbl');
+    const top = h('div', { class: 'row tall' },
+      textCol(this.title, this.sub, { id }),
+      select({ id: 'dns-provider', label: 'DNS provider', options: DNS, value: d.provider, disabled: !d.enabled,
+        onChange: (v) => commit((p) => { p.secureDns.provider = v; }) }),
+      switchBtn({ checked: d.enabled, labelledby: id, fk: 'sw:dns', onToggle: (v) => commit((p) => { p.secureDns.enabled = v; }) }));
+    if (d.provider !== 'custom') return top;
+    const saveCustom = (input) => {
+      const v = input.value.trim();
+      dnsDraft = null;
+      if (v !== prefs.secureDns.custom) commit((p) => { p.secureDns.custom = v; });
+    };
+    const input = h('input', { type: 'text', class: 'txt', id: 'dns-custom', fk: 'in:dns-custom', disabled: !d.enabled,
+      placeholder: 'https://dns.example/dns-query{?dns}', spellcheck: 'false', autocomplete: 'off',
+      value: dnsDraft ?? d.custom,
+      oninput: (e) => { dnsDraft = e.target.value; },
+      onblur: (e) => saveCustom(e.target),
+      onkeydown: (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveCustom(e.target); }
+        else if (e.key === 'Escape') { dnsDraft = null; e.target.value = prefs.secureDns.custom; }
+      } });
+    return h('div', { class: 'row-col' }, top,
+      h('div', { class: 'dns-custom' }, h('label', { for: 'dns-custom', class: 's' }, 'DNS-over-HTTPS template'), input));
+  },
+});
+
+/* --- Site permissions (search entries; the section has its own layout) --- */
+for (const p of PERMS) row({
+  id: 'perm-' + p.kind, section: 'permissions', title: p.label, sub: '',
+  kw: 'site permission permissions ' + p.kw + ' ' + p.on + ' ' + p.offT,
+  render() {
+    return linkRow({ iconName: p.icon, title: p.label, value: VALUE_LABEL[prefs.permissions[p.kind].default],
+      href: toUrl('/permissions/' + p.kind), onClick: () => go('permissions', p.kind) });
+  },
+});
+
+/* --- Downloads --- */
+row({
+  id: 'dl-location', section: 'downloads', title: 'Location', sub: '', kw: 'download folder directory save path',
+  render() {
+    const custom = prefs.downloads.dir;
+    const path = custom || info.downloadsDefault || '';
+    return h('div', { class: 'row tall' },
+      h('span', { class: 'rt' }, h('span', { class: 't' }, h('span', null, hl(this.title))), h('span', { class: 's mono', title: path }, path)),
+      custom ? h('button', { type: 'button', class: 'ghost', fk: 'b:dlreset', onclick: () => commit((p) => { p.downloads.dir = null; }) }, 'Reset') : null,
+      h('button', { type: 'button', class: 'btn', fk: 'b:dlchange', onclick: chooseDir }, 'Change…'));
+  },
+});
+async function chooseDir() {
+  try {
+    const r = await call('chooseDownloadDir');
+    if (r && r.dir) commit((p) => { p.downloads.dir = r.dir; });
+  } catch (e) { showToast({ text: errText(e), error: true }); }
+}
+row({
+  id: 'dl-ask', section: 'downloads', title: 'Ask where to save each file before downloading', sub: '',
+  kw: 'download prompt dialog save as location',
+  render() {
+    return toggleRow({ title: this.title, checked: prefs.downloads.ask, fk: 'sw:dlask',
+      onToggle: (v) => commit((p) => { p.downloads.ask = v; }) });
+  },
+});
+
+/* --- System --- */
+row({
+  id: 'hw-accel', section: 'system', title: 'Use hardware acceleration when available', sub: 'Applies after you restart Rustium',
+  kw: 'gpu graphics performance',
+  render() {
+    return toggleRow({ title: this.title, sub: this.sub, checked: prefs.hardwareAcceleration, fk: 'sw:hw',
+      onToggle: (v) => commit((p) => { p.hardwareAcceleration = v; }) });
+  },
+});
+row({
+  id: 'proxy', section: 'system', title: 'Proxy settings', sub: 'Rustium uses your computer’s proxy settings',
+  kw: 'proxy network vpn connection', when: () => info.platform === 'macos',
+  render() {
+    return h('div', { class: 'row tall' }, textCol(this.title, this.sub),
+      h('button', { type: 'button', class: 'btn', fk: 'b:proxy',
+        onclick: () => call('openProxySettings').catch((e) => showToast({ text: errText(e), error: true })) }, 'Open system settings'));
+  },
+});
+
+/* --- About --- */
+row({
+  id: 'about', section: 'about', title: 'About Rustium', sub: '', kw: 'version chromium cef profile update build',
+  render() {
+    return h('div', { class: 'about' }, logo(48, '#1d2027'),
+      h('div', { class: 'info' },
+        h('h2', null, hl('Rustium')),
+        h('span', { class: 'ver' }, 'Version ' + info.version),
+        h('div', { class: 'meta' },
+          h('span', null, 'Chromium ' + info.chromium),
+          h('span', null, 'CEF ' + info.cef),
+          h('span', null, 'Profile ' + info.profile)),
+        h('p', { class: 'blurb' }, 'A browser prototype built with Rust and the Chromium Embedded Framework.')));
+  },
+});
+
+/* --- Your data (later stage; listed for search) --- */
+const DATA_ITEMS = [
+  { id: 'history', title: 'History', icon: 'clock', kw: 'visited pages browsing history' },
+  { id: 'downloads', title: 'Downloads', icon: 'download', kw: 'downloaded files' },
+  { id: 'bookmarks', title: 'Bookmarks', icon: 'star', kw: 'favorites saved pages' },
+  { id: 'cookies', title: 'Cookies & site data', icon: 'cookie', kw: 'cookie storage site data' },
+];
+for (const d of DATA_ITEMS) row({
+  id: 'data-' + d.id, section: 'data', title: d.title, sub: '', kw: d.kw,
+  render() { return linkRow({ iconName: d.icon, title: d.title, soon: true }); },
+});
+
+const ROW_BY_ID = Object.fromEntries(ROWS.map((r) => [r.id, r]));
+const rowsOf = (pred) => ROWS.filter((r) => pred(r) && (!r.when || r.when()));
+function renderRow(r) { return r.render(); }
+
+/* ======================= Sidebar ======================= */
+const nav = document.getElementById('nav');
+const NAV = [
+  { head: 'Settings', items: [
+    { id: 'general' }, { off: 'Appearance', icon: 'appearance' }, { id: 'search' }, { id: 'privacy' },
+    { id: 'permissions' }, { id: 'downloads' }, { id: 'system' }, { id: 'about' }] },
+  { head: 'Your data', items: DATA_ITEMS.map((d) => ({ off: d.title, icon: d.icon })) },
+  { head: 'Coming later', items: [{ off: 'Passwords', icon: 'key', later: true }, { off: 'Extensions', icon: 'puzzle', later: true }] },
+];
+function renderNav() {
+  const fk = document.activeElement?.dataset?.fk;
+  nav.replaceChildren();
+  nav.classList.toggle('dim', !!query);
+  NAV.forEach((g, gi) => {
+    nav.append(h('div', { class: 'ghead' + (gi ? ' next' : '') }, g.head));
+    for (const it of g.items) {
+      if (it.off) {
+        nav.append(h('div', { class: 'nav-off' + (it.later ? ' later' : ''), 'aria-disabled': 'true' },
+          icon(it.icon), h('span', { class: 'lbl', title: it.off }, it.off), h('span', { class: 'soon' }, 'Soon')));
+        continue;
+      }
+      const s = SECTION_BY_ID[it.id];
+      const current = !query && route.section === s.id;
+      nav.append(h('a', { class: 'nav-a', href: toUrl('/' + s.id), fk: 'nav:' + s.id, 'aria-current': current ? 'page' : null,
+        onclick: (e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+          e.preventDefault();
+          go(s.id);
+        } }, icon(s.icon), h('span', { title: s.title }, s.title)));
+    }
+  });
+  if (fk && fk.startsWith('nav:')) focusFk(fk);
+}
+
+/* ======================= Pages ======================= */
+const content = document.getElementById('content');
+const main = document.getElementById('main');
+
+function pageHead(title, sub, live) {
+  return h('div', { class: 'phead' }, h('h1', { id: 'page-title' }, title),
+    sub ? h('p', { class: 'lead', role: live ? 'status' : null }, sub) : null);
+}
+function block(heading, rowIds, { fieldset = false } = {}) {
+  const rows = rowIds.map((id) => ROW_BY_ID[id]).filter((r) => !r.when || r.when());
+  if (!rows.length) return null;
+  const card = h('div', { class: 'card' }, rows.map(renderRow));
+  if (fieldset) return h('fieldset', { class: 'block' }, h('legend', null, heading), card);
+  return h('div', { class: 'block' }, heading ? h('h2', null, heading) : null, card);
+}
+const ids = (prefix, list) => list.map((x) => prefix + x.id);
+
+const PAGES = {
+  general: () => [
+    block('On startup', ids('startup-', STARTUP), { fieldset: true }),
+    block('Default browser', ['default-browser']),
+    block('Languages', ['language']),
+  ],
+  search: () => [block('Search engine', ids('engine-', ENGINES), { fieldset: true })],
+  privacy: () => [
+    block(null, ['clear-data']),
+    block('Cookies', [...ids('cookies-', COOKIES), 'clear-on-quit', 'see-cookies'], { fieldset: true }),
+    block('Tracking & security', ['dnt', 'https-only', 'secure-dns']),
+  ],
+  permissions: () => [renderPermissions()],
+  downloads: () => [block(null, ['dl-location', 'dl-ask'])],
+  system: () => [block(null, ['hw-accel', 'proxy'])],
+  about: () => [block(null, ['about'])],
+};
+
+function renderPermissions() {
+  const kind = route.kind || 'camera';
+  const meta = PERM_BY_KIND[kind];
+  const perm = prefs.permissions[kind];
+  const list = h('ul', { class: 'plist', 'aria-label': 'Permission types' },
+    PERMS.map((p) => h('li', null, h('a', {
+      class: 'pitem', href: toUrl('/permissions/' + p.kind), fk: 'perm:' + p.kind,
+      'aria-current': p.kind === kind ? 'true' : null,
+      onclick: (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+        e.preventDefault();
+        adding = null;
+        route = { section: 'permissions', kind: p.kind };
+        setUrl(toUrl(routePath(route)), false);
+        render();
+        if (matchMedia('(max-width: 1000px)').matches) document.querySelector('.pcard')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } },
+      icon(p.icon, 16, 2, 'pi'), h('span', { class: 'pl' }, p.label),
+      h('span', { class: 'pv' }, VALUE_LABEL[prefs.permissions[p.kind].default]),
+      icon('chevron', 14, 2.2, 'chev')))));
+
+  const onVal = meta.type === 'ask' ? 'ask' : 'allow';
+  const name = 'perm-' + kind;
+  const radio = (value, text) => h('label', { class: 'crad' },
+    h('input', { type: 'radio', class: 'vis-hidden', name, value, checked: perm.default === value, fk: `r:${name}:${value}`,
+      onchange: (e) => { if (e.target.checked) commit((p) => { p.permissions[kind].default = value; }); } }),
+    h('span', { class: 'radio', 'aria-hidden': 'true' }), h('span', null, text));
+
+  const titleId = 'perm-title';
+  const card = h('div', { class: 'pcard', role: 'region', 'aria-labelledby': titleId },
+    h('div', { class: 'pchead' }, h('span', { class: 'picon', 'aria-hidden': 'true' }, icon(meta.icon, 16)),
+      h('h2', { id: titleId }, meta.label)),
+    h('fieldset', { class: 'dfl' }, h('legend', null, 'Default behavior'),
+      radio(onVal, meta.on), radio('block', meta.offT)),
+    meta.note ? h('p', { class: 'note', style: 'margin:0' }, icon('info', 14), h('span', null, meta.note)) : null,
+    meta.noLists ? null : [exceptionList(kind, 'allow', meta.allowH), exceptionList(kind, 'block', meta.blockH)]);
+
+  return h('div', { class: 'perm' }, list, card);
+}
+function exceptionList(kind, which, heading) {
+  const key = `perm:${kind}:${which}`;
+  const entries = prefs.permissions[kind][which];
+  const other = which === 'allow' ? 'block' : 'allow';
+  const isAdding = adding?.key === key;
+  return h('div', { class: 'xlist' },
+    h('div', { class: 'xhead' }, h('h3', null, heading),
+      h('button', { type: 'button', class: 'btn sm', fk: 'b:add:' + key, 'aria-expanded': String(isAdding),
+        onclick: () => openAdd(key) }, icon('plus', 12, 2.4), 'Add site')),
+    isAdding ? inlineAdd({ key, placeholder: 'example.com', label: 'Site address',
+      onAdd: async (v) => {
+        const ok = await commit((p) => {
+          const e = p.permissions[kind];
+          e[other] = e[other].filter((x) => x !== v && hostOf(x) !== v);
+          if (!e[which].includes(v)) e[which].push(v);
+        });
+        if (ok && adding?.key === key) { adding = null; render(); focusFk('b:add:' + key); }
+      } }) : null,
+    entries.length
+      ? h('ul', { 'aria-label': heading }, entries.map((origin, i) => {
+          const host = hostOf(origin);
+          return h('li', null, monogram(host), h('span', { class: 'host', title: origin }, host),
+            which === 'block' ? h('span', { class: 'pill-blocked' }, kind === 'sound' ? 'Muted' : 'Blocked') : null,
+            h('button', { type: 'button', class: 'xbtn', 'aria-label': 'Remove ' + host, fk: `b:rm:${key}:${origin}`,
+              onclick: () => commit((p) => { p.permissions[kind][which].splice(i, 1); }) }, icon('x', 12, 2.4)));
+        }))
+      : (isAdding ? null : h('p', { class: 'muted', style: 'margin:0' }, 'No sites yet')));
+}
+
+/* ======================= Search ======================= */
+function haystack(r) { return (r.title + ' ' + r.sub + ' ' + (r.kw || '')).toLowerCase(); }
+function matches(r, toks) { const s = haystack(r); return toks.every((t) => s.includes(t)); }
+
+function levenshtein(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 99;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++)
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+let vocab = null;
+function suggestion(q) {
+  q = q.trim().toLowerCase();
+  if (q.length < 3) return null;
+  if (!vocab) {
+    vocab = new Set();
+    for (const r of ROWS) for (const w of haystack(r).split(/[^\p{L}\p{N}-]+/u)) if (w.length >= 3) vocab.add(w);
+  }
+  let best = null, bestD = 3;
+  for (const w of vocab) {
+    const d = levenshtein(q, w);
+    if (d < bestD && d > 0) { best = w; bestD = d; }
+  }
+  return best && rowsOf((r) => matches(r, [best])).length ? best : null;
+}
+
+function renderSearch() {
+  const toks = tokens();
+  const hits = rowsOf((r) => matches(r, toks));
+  const groups = [...SECTIONS, DATA_GROUP].map((s) => ({ s, rows: hits.filter((r) => r.section === s.id) })).filter((g) => g.rows.length);
+  const q = query.trim();
+  const out = [];
+  if (!hits.length) {
+    out.push(pageHead(`Search results for “${q}”`, 'No settings found', true));
+    const sug = suggestion(q);
+    const ill = new DOMParser().parseFromString(
+      '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="72" height="72" viewBox="0 0 72 72" fill="none" style="flex:none"><circle cx="36" cy="36" r="34" fill="#16181e"/><circle cx="31" cy="31" r="14" stroke="#9aa0ad" stroke-width="3.5"/><path d="M41.5 41.5l11 11" stroke="#9aa0ad" stroke-width="4.5" stroke-linecap="round"/><path d="M26 31h10" stroke="#8b7cff" stroke-width="3" stroke-linecap="round"/><circle cx="54" cy="20" r="2" fill="#8b7cff"/><circle cx="16" cy="50" r="1.5" fill="#6b7180"/></svg>',
+      'image/svg+xml').documentElement;
+    out.push(h('div', { class: 'emptycard' }, document.importNode(ill, true),
+      h('div', { class: 'txtcol' },
+        h('p', { class: 'big' }, `No settings match “${q}”`),
+        h('p', { class: 'sm' }, 'Check the spelling or try a broader term.'),
+        sug ? h('p', { class: 'sm didyou' }, 'Did you mean ',
+          h('a', { href: toUrl('/', '?search=' + encodeURIComponent(sug)), fk: 'a:didyou',
+            onclick: (e) => { e.preventDefault(); qInput.value = sug; setQuery(sug); qInput.focus(); } }, sug), '?') : null),
+      h('button', { type: 'button', class: 'btn lg', fk: 'b:clearsearch', style: 'color:var(--fg2);font-weight:400',
+        onclick: () => { clearSearch(); qInput.focus(); } }, 'Clear search')));
+    return out;
+  }
+  const n = hits.length, m = groups.length;
+  out.push(pageHead(`Search results for “${q}”`, `${n} setting${n === 1 ? '' : 's'} in ${m} section${m === 1 ? '' : 's'}`, true));
+  for (const { s, rows } of groups) {
+    out.push(h('div', { class: 'sgroup' },
+      h('div', { class: 'sghead' }, icon(s.icon, 14), h('h2', null, s.title),
+        s.id !== 'data' ? h('a', { href: toUrl('/' + s.id), fk: 'open:' + s.id,
+          onclick: (e) => { e.preventDefault(); prevRoute = null; go(s.id); } }, 'Open section') : null),
+      h('div', { class: 'card' }, rows.map(renderRow))));
+  }
+  return out;
+}
+
+const qInput = document.getElementById('q');
+const qClear = document.getElementById('qclear');
+const sfield = document.getElementById('sfield');
+let qTimer = 0;
+function syncSearchField() {
+  const has = qInput.value.length > 0;
+  qClear.hidden = !has;
+  sfield.classList.toggle('has-value', has);
+}
+function setQuery(q) {
+  const was = !!query.trim();
+  query = q;
+  if (q.trim()) {
+    if (!was) prevRoute = { ...route };
+    setUrl(toUrl('/', '?search=' + encodeURIComponent(q)), true);
+  } else {
+    if (prevRoute) route = prevRoute;
+    prevRoute = null;
+    query = '';
+    setUrl(toUrl(routePath(route)), true);
+  }
+  adding = null;
+  render();
+  main.scrollTop = 0;
+}
+function clearSearch() {
+  clearTimeout(qTimer);
+  qInput.value = '';
+  syncSearchField();
+  setQuery('');
+}
+qInput.addEventListener('input', () => {
+  syncSearchField();
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => setQuery(qInput.value), 120);
+});
+qInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { e.preventDefault(); clearSearch(); }
+  else if (e.key === 'Enter') { clearTimeout(qTimer); setQuery(qInput.value); }
+});
+qClear.addEventListener('click', (e) => { e.preventDefault(); clearSearch(); qInput.focus(); });
+
+/* ======================= Render ======================= */
+function render() {
+  renderNav();
+  if (!prefs || !info) return;
+  const active = document.activeElement;
+  const fk = active && content.contains(active) ? active.dataset.fk : null;
+  let selStart = null, selEnd = null;
+  if (fk && active.tagName === 'INPUT' && active.type === 'text') { selStart = active.selectionStart; selEnd = active.selectionEnd; }
+
+  const searching = !!query.trim();
+  const sec = SECTION_BY_ID[route.section] || SECTION_BY_ID.general;
+  const kids = searching ? renderSearch() : [pageHead(sec.title, sec.sub), ...PAGES[sec.id]()];
+  content.className = 'page' + (searching || ['privacy', 'permissions'].includes(sec.id) ? ' tight' : '');
+  content.setAttribute('aria-labelledby', 'page-title');
+  content.replaceChildren(...kids.flat().filter(Boolean));
+  document.title = searching ? 'Settings' : (sec.id === 'general' ? 'Settings' : sec.title + ' – Settings');
+
+  if (fk) {
+    const el = content.querySelector(`[data-fk="${CSS.escape(fk)}"]`);
+    if (el && !el.disabled) {
+      el.focus({ preventScroll: true });
+      if (selStart != null && el.setSelectionRange) try { el.setSelectionRange(selStart, selEnd); } catch (_) {}
+    }
+  }
+}
+
+/* ======================= Load & refresh ======================= */
+async function load(initial) {
+  try {
+    const r = await call('getSettings');
+    if (!r || !r.prefs) throw new Error('Empty settings');
+    info = r.info || info;
+    if (pendingSaves === 0) { lastGood = clone(r.prefs); prefs = clone(r.prefs); }
+    render();
+  } catch (e) {
+    if (initial) content.replaceChildren(h('p', { class: 'loading' }, 'Couldn’t load settings: ' + errText(e)));
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(false); });
+let lastFocusLoad = 0;
+window.addEventListener('focus', () => {
+  const now = Date.now();
+  if (now - lastFocusLoad > 500) { lastFocusLoad = now; load(false); }
+});
+
+applyLocation();
+load(true);
+</script>
+</body>
+</html>

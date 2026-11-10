@@ -17,6 +17,8 @@ const COMMAND: u32 = 1 << 7;
 // Windows virtual-key codes (CEF использует их на всех платформах).
 mod vk {
     pub const TAB: i32 = 0x09;
+    /// VK_OEM_COMMA — «,».
+    pub const COMMA: i32 = 0xBC;
     pub const LEFT: i32 = 0x25;
     pub const RIGHT: i32 = 0x27;
     pub const KEY_0: i32 = 0x30;
@@ -151,6 +153,8 @@ fn outcome(k: Keys) -> Option<Outcome> {
         vk::KEY_0 | vk::NUMPAD_0 if k.primary && plain => ZoomReset,
         vk::Q if mac && k.primary && plain => Quit,
         vk::P if k.primary && plain => Print,
+        // Настройки: Cmd+, (macOS).
+        vk::COMMA if mac && k.primary && plain => OpenSettings,
         _ => return edit_outcome(k, mac).map(Outcome::Edit),
     };
     Some(Outcome::Action(action))

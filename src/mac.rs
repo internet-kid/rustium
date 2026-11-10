@@ -146,3 +146,116 @@ pub fn style_popup_window(width: f64, height: f64, radius: f64) -> bool {
         found
     }
 }
+
+// -------------------------------------------------------------------------
+// Браузер по умолчанию и ссылки из других приложений
+// -------------------------------------------------------------------------
+
+#[link(name = "CoreServices", kind = "framework")]
+extern "C" {
+    fn LSCopyDefaultHandlerForURLScheme(scheme: *const AnyObject) -> *mut AnyObject;
+    fn LSSetDefaultHandlerForURLScheme(scheme: *const AnyObject, bundle_id: *const AnyObject) -> i32;
+}
+
+#[link(name = "CoreFoundation", kind = "framework")]
+extern "C" {
+    fn CFRelease(object: *const AnyObject);
+}
+
+fn bundle_id() -> Option<Retained<objc2_foundation::NSString>> {
+    objc2_foundation::NSBundle::mainBundle().bundleIdentifier()
+}
+
+/// Rustium открывает http-ссылки? `None` — запущен не из бандла.
+pub fn is_default_browser() -> Option<bool> {
+    use objc2_foundation::NSString;
+    let ours = bundle_id()?;
+    let scheme = NSString::from_str("http");
+    // SAFETY: NSString и CFString — один тип (toll-free bridging);
+    // функция Copy возвращает объект, который мы освобождаем.
+    unsafe {
+        let handler = LSCopyDefaultHandlerForURLScheme(Retained::as_ptr(&scheme).cast());
+        if handler.is_null() {
+            return Some(false);
+        }
+        let handler_str = &*(handler as *const NSString);
+        let same = handler_str.to_string().eq_ignore_ascii_case(&ours.to_string());
+        CFRelease(handler);
+        Some(same)
+    }
+}
+
+/// Попросить систему открывать http(s) в Rustium. macOS сама спросит
+/// пользователя; ответ придёт позже, поэтому результат не возвращаем.
+pub fn make_default_browser() {
+    use objc2_foundation::NSString;
+    let Some(ours) = bundle_id() else { return };
+    for scheme in ["http", "https"] {
+        let scheme = NSString::from_str(scheme);
+        // SAFETY: см. is_default_browser.
+        let status = unsafe {
+            LSSetDefaultHandlerForURLScheme(
+                Retained::as_ptr(&scheme).cast(),
+                Retained::as_ptr(&ours).cast(),
+            )
+        };
+        if status != 0 {
+            eprintln!("rustium: LSSetDefaultHandlerForURLScheme: {status}");
+        }
+    }
+}
+
+/// 'GURL' — Apple Event «открыть URL» (kInternetEventClass / kAEGetURL).
+const GURL: u32 = u32::from_be_bytes(*b"GURL");
+/// '----' — прямой параметр события (keyDirectObject).
+const DIRECT_OBJECT: u32 = u32::from_be_bytes(*b"----");
+
+define_class!(
+    // SAFETY: обычный NSObject без состояния.
+    #[unsafe(super(objc2_foundation::NSObject))]
+    #[thread_kind = MainThreadOnly]
+    #[name = "RustiumURLHandler"]
+    struct UrlHandler;
+
+    impl UrlHandler {
+        #[unsafe(method(handleGetURL:withReplyEvent:))]
+        fn handle_get_url(&self, event: &AnyObject, _reply: &AnyObject) {
+            let url: Option<String> = unsafe {
+                let param: *mut AnyObject = msg_send![event, paramDescriptorForKeyword: DIRECT_OBJECT];
+                if param.is_null() {
+                    None
+                } else {
+                    let s: *mut objc2_foundation::NSString = msg_send![param, stringValue];
+                    s.as_ref().map(|s| s.to_string())
+                }
+            };
+            if let Some(url) = url {
+                crate::shell::open_external(url);
+            }
+        }
+    }
+
+    unsafe impl NSObjectProtocol for UrlHandler {}
+);
+
+/// Принимать ссылки, которые открывают в Rustium другие приложения.
+/// Вызывать до запуска цикла сообщений: ссылка, с которой нас запустили,
+/// приходит первым же событием.
+pub fn install_url_handler() {
+    use objc2::MainThreadMarker;
+    let Some(mtm) = MainThreadMarker::new() else { return };
+    let handler: Retained<UrlHandler> = unsafe { msg_send![UrlHandler::alloc(mtm), init] };
+    unsafe {
+        let manager: *mut AnyObject =
+            msg_send![objc2::class!(NSAppleEventManager), sharedAppleEventManager];
+        let _: () = msg_send![
+            manager,
+            setEventHandler: &*handler,
+            andSelector: objc2::sel!(handleGetURL:withReplyEvent:),
+            forEventClass: GURL,
+            andEventID: GURL
+        ];
+    }
+    // Менеджер не держит ссылку на обработчик: живёт до выхода.
+    std::mem::forget(handler);
+}

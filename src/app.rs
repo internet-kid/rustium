@@ -34,6 +34,7 @@ wrap_app! {
             if cfg!(all(target_os = "macos", debug_assertions)) {
                 command_line.append_switch(Some(&CefString::from("use-mock-keychain")));
             }
+            crate::settings::apply_switches(command_line);
         }
 
         // Схема rustium:// должна быть зарегистрирована во всех процессах.
@@ -247,6 +248,11 @@ pub fn run_main() -> i32 {
             return code;
         }
     }
+
+    // Настройки нужны до инициализации: часть из них — ключи Chromium.
+    crate::prefs::init(&profile_dir());
+    #[cfg(target_os = "macos")]
+    crate::mac::install_url_handler();
 
     if initialize(
         Some(args.as_main_args()),

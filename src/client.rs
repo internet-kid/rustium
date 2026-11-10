@@ -6,7 +6,8 @@
 use crate::downloads::{self, Snapshot};
 use crate::shell::{Action, Shell, TabId};
 use crate::task::post_ui;
-use crate::ui;
+use crate::prefs::{PermKind, Setting};
+use crate::{settings, ui};
 use cef::wrapper::message_router::MessageRouterBrowserSideHandlerCallbacks;
 use cef::*;
 use std::os::raw::c_int;
@@ -60,6 +61,7 @@ pub fn new_client(shell: Arc<Shell>, role: Role) -> Client {
         keyboard: RustiumKeyboardHandler::new(shell.clone()),
         drag: RustiumDragHandler::new(shell.clone(), role),
         download: RustiumDownloadHandler::new(shell.clone()),
+        permission: RustiumPermissionHandler::new(shell.clone(), role),
     };
     RustiumClient::new(shell, role, handlers)
 }
@@ -74,6 +76,7 @@ struct Handlers {
     keyboard: KeyboardHandler,
     drag: DragHandler,
     download: DownloadHandler,
+    permission: PermissionHandler,
 }
 
 wrap_client! {
@@ -106,6 +109,11 @@ wrap_client! {
 
         fn drag_handler(&self) -> Option<DragHandler> {
             Some(self.handlers.drag.clone())
+        }
+
+        fn permission_handler(&self) -> Option<PermissionHandler> {
+            // Разрешения просят только сайты во вкладках.
+            matches!(self.role, Role::Tab(_)).then(|| self.handlers.permission.clone())
         }
 
         fn download_handler(&self) -> Option<DownloadHandler> {
@@ -161,6 +169,12 @@ wrap_display_handler! {
                 return;
             }
             let url = url.map(|u| u.to_string()).unwrap_or_default();
+            // Запросы разрешений другого сайта больше не нужны; звук —
+            // по настройкам нового сайта.
+            self.shell.drop_prompts(id, Some(&url));
+            if let Some(browser) = browser.as_deref() {
+                self.shell.apply_sound(browser, &url);
+            }
             self.shell.update_tab(id, |tab| {
                 // Ушли со страницы ошибки — забываем её.
                 if tab.error_page.is_some() && !ui::is_error_page(&url) {
@@ -170,6 +184,18 @@ wrap_display_handler! {
                 tab.url = url;
                 tab.favicon = None;
             });
+        }
+
+        fn on_media_access_change(
+            &self,
+            browser: Option<&mut Browser>,
+            has_video_access: ::std::os::raw::c_int,
+            has_audio_access: ::std::os::raw::c_int,
+        ) {
+            let role = self.shell.role_of(self.role, browser.as_deref());
+            let Role::Tab(id) = role else { return };
+            self.shell
+                .media_access_changed(id, has_video_access != 0, has_audio_access != 0);
         }
 
         fn on_title_change(&self, browser: Option<&mut Browser>, title: Option<&CefString>) {
@@ -309,7 +335,7 @@ wrap_life_span_handler! {
             target_url: Option<&CefString>,
             _target_frame_name: Option<&CefString>,
             target_disposition: WindowOpenDisposition,
-            _user_gesture: ::std::os::raw::c_int,
+            user_gesture: ::std::os::raw::c_int,
             _popup_features: Option<&PopupFeatures>,
             _window_info: Option<&mut WindowInfo>,
             _client: Option<&mut Option<Client>>,
@@ -321,8 +347,20 @@ wrap_life_span_handler! {
             // target=_blank и window.open() открываем вкладкой, а не окном.
             // Из панели всплывающие окна не открываем вообще.
             if let Role::Tab(id) = role {
-                let url = target_url.map(|u| u.to_string()).unwrap_or_default();
-                open_in_new_tab(&self.shell, id, url, target_disposition);
+                // Окна без действия пользователя (реклама, редиректы)
+                // открываем, только если сайту это разрешено.
+                let opener = browser
+                    .and_then(|b| b.main_frame())
+                    .map(|f| CefString::from(&f.url()).to_string())
+                    .unwrap_or_default();
+                let allowed = user_gesture != 0
+                    || settings::decide(PermKind::Popups, &opener) == Setting::Allow;
+                if allowed {
+                    let url = target_url.map(|u| u.to_string()).unwrap_or_default();
+                    open_in_new_tab(&self.shell, id, url, target_disposition);
+                } else {
+                    eprintln!("rustium: заблокировано всплывающее окно с {opener}");
+                }
             }
             1
         }
@@ -600,13 +638,21 @@ wrap_download_handler! {
             let (Some(item), Some(callback)) = (download_item, callback) else {
                 return 0;
             };
-            let dir = downloads::downloads_dir();
+            let download_prefs = crate::prefs::get().downloads;
+            let dir = download_prefs
+                .dir
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(downloads::downloads_dir);
             let _ = std::fs::create_dir_all(&dir);
             let name = suggested_name.map(|n| n.to_string()).unwrap_or_default();
             let path = downloads::unique_path(&dir, &name, |p| p.exists());
             let mut snap = snapshot(item);
             snap.path = path.to_string_lossy().into_owned();
-            callback.cont(Some(&CefString::from(snap.path.as_str())), 0);
+            // «Спрашивать, куда сохранять»: CEF покажет диалог с этим путём.
+            callback.cont(
+                Some(&CefString::from(snap.path.as_str())),
+                download_prefs.ask as c_int,
+            );
             // Обработчики загрузок вызываются на UI-потоке, а download_started
             // не вызывает CEF под блокировкой, поэтому зовём его сразу.
             self.shell.download_started(snap);
@@ -623,6 +669,67 @@ wrap_download_handler! {
             let snap = snapshot(item);
             let callback = callback.map(|c| c.clone());
             self.shell.download_updated(snap, callback);
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Разрешения сайтов (решения — в shell/permissions.rs)
+// -------------------------------------------------------------------------
+
+wrap_permission_handler! {
+    struct RustiumPermissionHandler {
+        shell: Arc<Shell>,
+        role: Role,
+    }
+
+    impl PermissionHandler {
+        fn on_request_media_access_permission(
+            &self,
+            browser: Option<&mut Browser>,
+            _frame: Option<&mut Frame>,
+            requesting_origin: Option<&CefString>,
+            requested_permissions: u32,
+            callback: Option<&mut MediaAccessCallback>,
+        ) -> ::std::os::raw::c_int {
+            let role = self.shell.role_of(self.role, browser.as_deref());
+            let (Role::Tab(id), Some(callback)) = (role, callback) else {
+                return 0;
+            };
+            let origin = requesting_origin.map(|o| o.to_string()).unwrap_or_default();
+            self.shell
+                .media_request(id, origin, requested_permissions, callback.clone()) as c_int
+        }
+
+        fn on_show_permission_prompt(
+            &self,
+            browser: Option<&mut Browser>,
+            prompt_id: u64,
+            requesting_origin: Option<&CefString>,
+            requested_permissions: u32,
+            callback: Option<&mut PermissionPromptCallback>,
+        ) -> ::std::os::raw::c_int {
+            let role = self.shell.role_of(self.role, browser.as_deref());
+            let (Role::Tab(id), Some(callback)) = (role, callback) else {
+                return 0;
+            };
+            let origin = requesting_origin.map(|o| o.to_string()).unwrap_or_default();
+            self.shell.permission_prompt(
+                id,
+                prompt_id,
+                origin,
+                requested_permissions,
+                callback.clone(),
+            ) as c_int
+        }
+
+        fn on_dismiss_permission_prompt(
+            &self,
+            _browser: Option<&mut Browser>,
+            prompt_id: u64,
+            _result: PermissionRequestResult,
+        ) {
+            self.shell.permission_dismissed(prompt_id);
         }
     }
 }

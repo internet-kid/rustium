@@ -115,7 +115,8 @@ impl Shell {
             return;
         };
         let window_size = window.map(|w| w.bounds());
-        let bounds = popup_bounds(anchor, width, height, window_size.as_ref());
+        let left = kind == PopupKind::Permission;
+        let bounds = popup_bounds(anchor, width, height, window_size.as_ref(), left);
         overlay.set_bounds(Some(&bounds));
         overlay.set_visible(1);
         #[cfg(not(target_os = "macos"))]
@@ -124,7 +125,7 @@ impl Shell {
         {
             let radius = match kind {
                 PopupKind::Menu => 14.0,
-                PopupKind::Downloads => 16.0,
+                PopupKind::Downloads | PopupKind::Permission => 16.0,
             };
             let rounded = crate::mac::style_popup_window(
                 bounds.width as f64,
@@ -166,13 +167,17 @@ impl Shell {
 }
 
 /// Где поставить всплывающее окно размером `width`×`height` (с полями
-/// под тень): правым краем карточки под правый край кнопки, сразу под
-/// панелью, не выходя за окно.
-fn popup_bounds(anchor: Anchor, width: f64, height: f64, window: Option<&Rect>) -> Rect {
+/// под тень): правым краем карточки под правый край кнопки (`left` —
+/// левым под левый), сразу под панелью, не выходя за окно.
+fn popup_bounds(anchor: Anchor, width: f64, height: f64, window: Option<&Rect>, left: bool) -> Rect {
     let width = width.ceil() as i32;
     let mut height = height.ceil() as i32;
     let right = (anchor.x + anchor.width).round() as i32;
-    let mut x = right + MARGIN - width;
+    let mut x = if left {
+        anchor.x.round() as i32 - MARGIN
+    } else {
+        right + MARGIN - width
+    };
     let y = ui::TOOLBAR_HEIGHT + GAP - MARGIN;
     // Карточка не выходит за окно (поля, если они есть, могут).
     if let Some(w) = window {
@@ -206,14 +211,17 @@ mod tests {
     fn popup_sits_under_the_button() {
         let window = Rect { x: 0, y: 0, width: 1280, height: 840 };
         // Кнопка меню у правого края: карточка шириной 300 + поля.
-        let r = popup_bounds(anchor(1242.0), 300.0 + 2.0 * MARGIN as f64, 500.0, Some(&window));
+        let r = popup_bounds(anchor(1242.0), 300.0 + 2.0 * MARGIN as f64, 500.0, Some(&window), false);
         assert_eq!(r.x + r.width - MARGIN, 1272);
         assert_eq!(r.y + MARGIN, 86);
         // Слишком высокое окно обрезается по низу окна.
-        let r = popup_bounds(anchor(1242.0), 300.0 + 2.0 * MARGIN as f64, 2000.0, Some(&window));
+        let r = popup_bounds(anchor(1242.0), 300.0 + 2.0 * MARGIN as f64, 2000.0, Some(&window), false);
         assert_eq!(r.y + r.height, 840);
         // Кнопка у левого края: карточка не уходит за левую границу.
-        let r = popup_bounds(anchor(10.0), 432.0, 100.0, Some(&window));
+        let r = popup_bounds(anchor(10.0), 432.0, 100.0, Some(&window), false);
         assert_eq!(r.x + MARGIN, 0);
+        // Запрос разрешения — левым краем под значок сайта.
+        let r = popup_bounds(anchor(120.0), 340.0, 200.0, Some(&window), true);
+        assert_eq!(r.x + MARGIN, 120);
     }
 }
